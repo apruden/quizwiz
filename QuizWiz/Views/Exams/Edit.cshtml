@@ -1,0 +1,128 @@
+﻿@model QuizWiz.Models.Exam
+
+@{
+  ViewBag.Title = "Edit Quiz";
+}
+
+<h2>Edit Quiz</h2>
+
+@using (Html.BeginForm("Edit", "Question", FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
+{
+  @Html.AntiForgeryToken()
+  <h4>Exam</h4>
+  <hr />
+  @Html.ValidationSummary(true)
+  @Html.HiddenFor(model => model.ExamId)
+
+  <div class="form-group">
+    @Html.LabelFor(model => model.Name, new { @class = "control-label col-md-2" })
+    <div class="col-md-10">
+      @Html.EditorFor(model => model.Name)
+      @Html.ValidationMessageFor(model => model.Name)
+    </div>
+  </div>
+
+  <div class="form-group">
+    @Html.LabelFor(model => model.AllowRetries, new { @class = "control-label col-md-2" })
+    <div class="col-md-10">
+      @Html.EditorFor(model => model.AllowRetries)
+      @Html.ValidationMessageFor(model => model.AllowRetries)
+    </div>
+  </div>
+
+  <div class="form-group">
+    <div class="col-md-offset-2 col-md-10">
+      <input type="submit" value="Save" class="btn btn-default" />
+    </div>
+  </div>
+}
+
+@if (Model.ExamId != 0)
+{
+  <button type="button" data-bind="click: addQuestion" class="btn btn-default">Add question</button>
+  <!-- ko foreach: questions -->
+  <form class="form-horizontal" role="form">
+    <fieldset>
+      <legend>Question</legend>
+      <div class="form-group">
+        <textarea data-bind="value: text" class="form-control"></textarea>
+      </div>
+      <legend>Answers</legend>
+      <div data-bind="foreach: answers">
+        <div class="form-group">
+          <label>Answer #</label>
+          <textarea data-bind="value: text" class="form-control"></textarea>
+        </div>
+      </div>
+      <button type="button" data-bind="click: addAnswer" class="btn btn-default">Add answer</button>
+      <button data-bind="click: save" class="btn btn-primary">save</button>
+    </fieldset>
+
+  </form>
+  <!-- /ko -->
+}
+
+<div>
+  @Html.ActionLink("Back to List", "Index")
+</div>
+
+@section Scripts {
+  @Scripts.Render("~/bundles/jqueryval")
+  @Scripts.Render("~/bundles/ko")
+  <script>
+    $.exam = JSON.parse('@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model))');
+  </script>
+  <script type="text/javascript">
+    function AnswerViewModel(a) {
+      var self = this;
+      this.text = ko.observable(a.Text);
+    };
+
+    function QuestionViewModel(q) {
+      var self = this;
+      this.text = ko.observable(q.Text);
+      this.answers = ko.observableArray(ko.utils.arrayMap(q.Answers || [], function (a) {
+        return new AnswerViewModel(a);
+      }));
+      this.save = function () {
+        var answers = [];
+
+        $.each(self.answers(), function (idx, a) {
+          answers.push({ Text: a.text() });
+        });
+
+        $.ajax({
+          url: '/Question/Edit',
+          type: 'POST',
+          dataType: 'json',
+          data: JSON.stringify({ SectionId: 1, Text: self.text(), Answers: answers }),
+          contentType: "application/json; charset=utf-8",
+          success: function (data) {
+            alert('saved');
+          },
+          error: function (jqXhr, status, msg) {
+            alert('errr');
+          }
+        });
+      };
+      this.addAnswer = function () {
+        self.answers.push(new AnswerViewModel({ Text: '' }));
+      }
+    }
+
+    function ExamViewModel() {
+      var self = this;
+      this.questions = ko.observableArray(ko.utils.arrayMap($.exam.Sections[0].Questions || [], function (q) {
+        return new QuestionViewModel(q);
+      }));
+
+      this.addQuestion = function () {
+        self.questions.push(new QuestionViewModel({ Text: '', Answers: [] }));
+      };
+
+    };
+
+    var viewModel = new ExamViewModel();
+    ko.applyBindings(viewModel);
+  </script>
+}

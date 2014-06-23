@@ -1,0 +1,18 @@
+﻿@model QuizWiz.Models.ExamIndexModel
+@{
+  ViewBag.Title = "Index";
+}
+
+<h2>Quizzes</h2>
+
+<form class="form-inline" role="form">
+  <input type="search" class="form-control" placeholder="Search quiz">
+</form>
+
+@foreach (var exam in Model.Exams)
+{
+  <div>
+    <a href="#">@exam.Name</a>
+    <button type="button" class="btn-primary">Take</button>
+  </div>
+}

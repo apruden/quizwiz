@@ -1,0 +1,141 @@
+﻿@model QuizWiz.Models.ExamSectionModel
+
+@{
+  ViewBag.Title = "Take";
+}
+
+<h2>Take</h2>
+
+@if (Model.Submission != null)
+{
+  <input type="hidden" id="SubmissionId" name="SubmissionId" value="@Model.Submission.SubmissionId" data-bind="value: submissionId" />
+  <input type="hidden" id="QuestionsCount" name="QuestionsCount" value="@Model.Section.Questions.Count" data-bind="value: questionsCount" />
+}
+else
+{
+  <input type="hidden" id="SubmissionId" name="SubmissionId" value="0" data-bind="value: submissionId" />
+}
+
+<div>
+  <span data-bind="text: clock"></span>
+</div>
+
+<div data-bind="template: { name: 'question-template', data: question }">
+</div>
+
+<div>
+  <button data-bind="text: action, click: submitQuestion">Submit</button>
+</div>
+
+<script type="text/html" id="question-template">
+  <h3 data-bind="text: Text"></h3>
+  <div data-bind="template: { name: 'answer-template', foreach: Answers, as: 'answer' }"></div>
+</script>
+
+<script type="text/html" id="answer-template">
+  <p>
+    <input data-bind="value: AnswerId, checked: $root.responseId" name="answerGroup" type="radio" value="" /><span data-bind="text: Text"></span>
+  </p>
+</script>
+
+@section Scripts {
+  @Scripts.Render("~/bundles/ko")
+  <script>
+    $.enableExam = {};
+    $.enableExam.question = JSON.parse('@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Question))');
+  </script>
+  <script type="text/javascript">
+    function ExamViewModel() {
+      var self = this;
+      this.responseId = ko.observable();
+      this.action = ko.observable('Next');
+      this.question = ko.observable($.enableExam.question);
+      this.submissionId = ko.observable($('#SubmissionId').val());
+      this.questionsCount = ko.observable(parseInt($('#QuestionsCount').val(), 10));
+      this.submitQuestion = function () {
+        $.ajax({
+          url: '/Exams/SubmitResponse',
+          type: 'POST',
+          dataType: 'json',
+          data: { SubmissionId: self.submissionId, QuestionId: self.question().QuestionId, AnswerId: self.responseId },
+          success: function (data) {
+            if (data) {
+              location.hash = data.OrderIndex;
+            }
+            else {
+              location = '/Exams/Finished';
+            }
+          },
+          error: function (jqXhr, status, msg) {
+            if (jqXhr.status == 300) {
+              location = '/Exams/Finished';
+            }
+            else {
+              alert("Unexpected error. Contact support.");
+            }
+          }
+        });
+      };
+
+      this.getQuestion = function (orderIndex, submissionId) {
+        $.ajax({
+          url: '/Exams/GetQuestion',
+          type: 'GET',
+          data: { OrderIndex: orderIndex, SubmissionId: submissionId },
+          dataType: 'json',
+          success: function (data) {
+            if (data.Question) {
+              self.question(data.Question);
+
+              if (self.question().OrderIndex == self.questionsCount()) {
+                self.action("Finish");
+              }
+            }
+            else {
+              location = '/Exams/Finished';
+            }
+          },
+          error: function (jqXhr) {
+            if (jqXhr.status == 300) {
+              location = '/Exams/Finished';
+            }
+            else {
+              alert("Unexpected error. Contact support.");
+            }
+          }
+        });
+      };
+
+      this.clock = ko.observable(new Date());
+
+      this.tick = function () {
+        self.clock(new Date());
+      };
+
+      this.heartbeat = function () {
+        $.ajax({
+          url: '/Exams/Heartbeat',
+          type: 'GET',
+          data: { SubmissionId: self.submissionId },
+          success: function () {
+          },
+          error: function () {
+          }
+        });
+      };
+
+      setInterval(self.tick, 3000);
+
+      setInterval(self.heartbeat, 60000);
+
+      Sammy(function () {
+        this.get('#:orderIndex', function () {
+          self.getQuestion(this.params.orderIndex, self.submissionId);
+        });
+      }).run();
+    };
+
+    var viewModel = new ExamViewModel();
+    ko.applyBindings(viewModel);
+  </script>
+}
