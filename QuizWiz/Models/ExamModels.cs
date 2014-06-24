@@ -92,7 +92,18 @@
         /// <summary>
         /// 
         /// </summary>
+        [UIHint("MultilineText")]
+        public string Description { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public bool AllowRetries { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool Private { get; set; }
 
         /// <summary>
         /// 

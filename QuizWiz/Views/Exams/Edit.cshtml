@@ -13,7 +13,6 @@
   <hr />
   @Html.ValidationSummary(true)
   @Html.HiddenFor(model => model.ExamId)
-
   <div class="form-group">
     @Html.LabelFor(model => model.Name, new { @class = "control-label col-md-2" })
     <div class="col-md-10">
@@ -21,7 +20,13 @@
       @Html.ValidationMessageFor(model => model.Name)
     </div>
   </div>
-
+  <div class="form-group">
+    @Html.LabelFor(model => model.Description, new { @class = "control-label col-md-2" })
+    <div class="col-md-10">
+      @Html.EditorFor(model => model.Description)
+      @Html.ValidationMessageFor(model => model.Description)
+    </div>
+  </div>
   <div class="form-group">
     @Html.LabelFor(model => model.AllowRetries, new { @class = "control-label col-md-2" })
     <div class="col-md-10">
@@ -29,7 +34,13 @@
       @Html.ValidationMessageFor(model => model.AllowRetries)
     </div>
   </div>
-
+  <div class="form-group">
+    @Html.LabelFor(model => model.Private, new { @class = "control-label col-md-2" })
+    <div class="col-md-10">
+      @Html.EditorFor(model => model.Private)
+      @Html.ValidationMessageFor(model => model.Private)
+    </div>
+  </div>
   <div class="form-group">
     <div class="col-md-offset-2 col-md-10">
       <input type="submit" value="Save" class="btn btn-default" />
@@ -40,25 +51,7 @@
 @if (Model.ExamId != 0)
 {
   <button type="button" data-bind="click: addQuestion" class="btn btn-default">Add question</button>
-  <!-- ko foreach: questions -->
-  <form class="form-horizontal" role="form">
-    <fieldset>
-      <legend>Question</legend>
-      <div class="form-group">
-        <textarea data-bind="value: text" class="form-control"></textarea>
-      </div>
-      <legend>Answers</legend>
-      <div data-bind="foreach: answers">
-        <div class="form-group">
-          <label>Answer #</label>
-          <textarea data-bind="value: text" class="form-control"></textarea>
-        </div>
-      </div>
-      <button type="button" data-bind="click: addAnswer" class="btn btn-default">Add answer</button>
-      <button data-bind="click: save" class="btn btn-primary">save</button>
-    </fieldset>
-
-  </form>
+  <!-- ko template: { name: displayMode, foreach: questions } -->
   <!-- /ko -->
 }
 
@@ -67,12 +60,71 @@
 </div>
 
 @section Scripts {
+  <script id="displayQuestion" type="text/html">
+    <div>
+      <button type="button" class="btn btn-default" data-bind="click: editQuestion">Edit</button>
+      <button type="button" class="btn btn-default" data-bind="click: deleteQuestion">Delete</button>
+      <p data-bind="text: text"></p>
+      <ul data-bind="foreach: answers">
+        <li data-bind="text: text"></li>
+      </ul>
+    </div>
+  </script>
+  <script id="editQuestion" type="text/html">
+  <form class="form-horizontal" role="form">
+    <fieldset>
+      <legend>Question</legend>
+      <div class="form-group">
+        <textarea data-bind="attr: { 'id': 'q_' + $index()}, richText: text" class="form-control"></textarea>
+      </div>
+      <h3>Answers</h3>
+      <div data-bind="foreach: answers">
+        <div class="form-group">
+          <label>Answer #</label>
+          <textarea data-bind="attr: { 'id': 'a_' + $index()}, richText: text" class="form-control"></textarea>
+        </div>
+      </div>
+      <button type="button" data-bind="click: addAnswer" class="btn btn-default">Add answer</button>
+      <button data-bind="click: save" class="btn btn-primary">Save</button>
+    </fieldset>
+  </form>
+  </script>
+
   @Scripts.Render("~/bundles/jqueryval")
   @Scripts.Render("~/bundles/ko")
+  @Scripts.Render("~/bundles/ckeditor")
   <script>
+    ko.bindingHandlers.richText = {
+      init: function (element, valueAccessor, allBindingsAccessor, ViewModel) {
+        var txtBoxID = $(element).attr('id');
+        var options = allBindingsAccessor().richTextOptions || {};
+        options.toolbar_Full = [
+            ['Bold', 'Italic'],
+            ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent'],
+            ['Link', 'Unlink']
+        ];
+        ko.utils.domNodeDisposal.addDisposeCallback(element, function () {
+          if (CKEDITOR.instances[txtBoxID]) {
+            CKEDITOR.remove(CKEDITOR.instances[txtBoxID]);
+          };
+        });
+
+        $(element).ckeditor(options);
+        CKEDITOR.instances[txtBoxID].focusManager.blur = function () {
+          var observable = valueAccessor();
+          observable($(element).val());
+        };
+      },
+
+      update: function (element, valueAccessor, allBindingsAccessor, ViewModel) {
+        var value = valueAccessor(),
+          valueUnwrapped = ko.utils.unwrapObservable(value);
+        $(element).val(valueUnwrapped);
+      }
+    };
+
     $.exam = JSON.parse('@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model))');
-  </script>
-  <script type="text/javascript">
+
     function AnswerViewModel(a) {
       var self = this;
       this.text = ko.observable(a.Text);
@@ -80,10 +132,17 @@
 
     function QuestionViewModel(q) {
       var self = this;
+
+      this.editing = ko.observable(q.Editing || false);
+
+
+
       this.text = ko.observable(q.Text);
+
       this.answers = ko.observableArray(ko.utils.arrayMap(q.Answers || [], function (a) {
         return new AnswerViewModel(a);
       }));
+
       this.save = function () {
         var answers = [];
 
@@ -105,21 +164,35 @@
           }
         });
       };
+
       this.addAnswer = function () {
         self.answers.push(new AnswerViewModel({ Text: '' }));
       }
     }
 
+    /*Exam view model*/
     function ExamViewModel() {
       var self = this;
+
+      this.displayMode = function (question) {
+        return question.editing() ? "editQuestion" : "displayQuestion";
+      };
+
       this.questions = ko.observableArray(ko.utils.arrayMap($.exam.Sections[0].Questions || [], function (q) {
         return new QuestionViewModel(q);
       }));
 
       this.addQuestion = function () {
-        self.questions.push(new QuestionViewModel({ Text: '', Answers: [] }));
+        self.questions.push(new QuestionViewModel({ Text: '', Answers: [], Editing : true }));
       };
 
+      this.editQuestion = function () {
+
+      };
+       
+      this.deleteQuestion = function () {
+
+      };
     };
 
     var viewModel = new ExamViewModel();

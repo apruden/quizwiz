@@ -9,7 +9,9 @@ create table Answer (
 create table Exam (
     ExamId integer primary key autoincrement,
     Name text null,
-    AllowRetries boolean not null
+	Description text null,
+    AllowRetries boolean not null,
+	Private boolean not null
 );
 create table Question (
     QuestionId integer primary key autoincrement,

@@ -1,14 +1,17 @@
-﻿using Microsoft.AspNet.Identity;
-using Microsoft.AspNet.Identity.Owin;
-using Microsoft.Owin;
-using Microsoft.Owin.Security.Cookies;
-using QuizWiz.Models;
-using Owin;
-using System;
-using System.Configuration;
-
-namespace QuizWiz
+﻿namespace QuizWiz
 {
+    using Microsoft.AspNet.Identity;
+    using Microsoft.AspNet.Identity.Owin;
+    using Microsoft.Owin;
+    using Microsoft.Owin.Security.Cookies;
+    using QuizWiz.Models;
+    using Owin;
+    using System;
+    using System.Configuration;
+
+    /// <summary>
+    /// 
+    /// </summary>
     public partial class Startup
     {
         // For more information on configuring authentication, please visit http://go.microsoft.com/fwlink/?LinkId=301864
@@ -36,6 +39,7 @@ namespace QuizWiz
                         regenerateIdentity: (manager, user) => user.GenerateUserIdentityAsync(manager))
                 }
             });
+
             app.UseExternalSignInCookie(DefaultAuthenticationTypes.ExternalCookie);
 
             // Enables the application to temporarily store user information when they are verifying the second factor in the two-factor authentication process.

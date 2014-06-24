@@ -19,8 +19,7 @@
         /// <summary>
         /// 
         /// </summary>
-        /// <returns></returns>
-        [Authorize]
+        /// <returns></returns>]
         public ActionResult About()
         {
             ViewBag.Message = "QuizWiz";

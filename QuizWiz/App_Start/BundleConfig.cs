@@ -1,9 +1,18 @@
-﻿using System.Web.Optimization;
+﻿using System.Collections.Generic;
+using System.Web.Optimization;
 
 namespace QuizWiz
 {
     public class BundleConfig
     {
+        class NonOrderingBundleOrderer : IBundleOrderer
+        {
+            public IEnumerable<BundleFile> OrderFiles(BundleContext context, IEnumerable<BundleFile> files)
+            {
+                return files;
+            }
+        }
+
         // For more information on bundling, visit http://go.microsoft.com/fwlink/?LinkId=301862
         public static void RegisterBundles(BundleCollection bundles)
         {
@@ -16,6 +25,14 @@ namespace QuizWiz
             bundles.Add(new ScriptBundle("~/bundles/jqueryval").Include(
                         "~/Scripts/jquery.validate*"));
 
+            var ckBundle = new ScriptBundle("~/bundles/ckeditor")
+                .Include("~/Scripts/ckeditor/ckeditor.js")
+                .Include("~/Scripts/ckeditor/adapters/jquery.js");
+
+            ckBundle.Orderer = new NonOrderingBundleOrderer();
+
+            bundles.Add(ckBundle);
+             
             bundles.Add(new ScriptBundle("~/bundles/ko").Include(
                         "~/Scripts/knockout-*", "~/Scripts/sammy-*"));
 
