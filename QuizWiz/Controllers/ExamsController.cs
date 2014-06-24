@@ -311,6 +311,25 @@
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="q"></param>
+        /// <returns></returns>
+        public ActionResult Search(string q)
+        {
+            var exams = new List<Exam>();
+
+            using (var db = this.factory.GetExamContext())
+            {
+                exams = (from e in db.Exams
+                             where e.Name.Contains(q)
+                             select e).Take(20).ToList();
+            }
+
+            return Json(exams, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <returns></returns>
         [HttpPost]
         public ActionResult UploadTest(string name, HttpPostedFileBase submission)

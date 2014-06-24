@@ -5,6 +5,7 @@ using Microsoft.Owin.Security.Cookies;
 using QuizWiz.Models;
 using Owin;
 using System;
+using System.Configuration;
 
 namespace QuizWiz
 {
@@ -54,9 +55,9 @@ namespace QuizWiz
             //   consumerKey: "",
             //   consumerSecret: "");
 
-            //app.UseFacebookAuthentication(
-            //   appId: "",
-            //   appSecret: "");
+            app.UseFacebookAuthentication(
+               appId: ConfigurationManager.AppSettings["FbAppId"],
+               appSecret: ConfigurationManager.AppSettings["FbSecret"]);
 
             //app.UseGoogleAuthentication(
             //    clientId: "",

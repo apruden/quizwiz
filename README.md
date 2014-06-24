@@ -10,6 +10,13 @@ Web application to create quizzes/surveys.
   * SQLite provider
   * Azure
 
+#TODO
+
+  * public/private tests
+  * commented results
+  * send invitations
+  * external authentication (oauth)
+
 #Demo
 
 Try it at http://quizwiz.azurewebapps.net

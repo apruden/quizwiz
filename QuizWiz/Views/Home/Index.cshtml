@@ -5,12 +5,46 @@
 <div class="jumbotron">
   <h1>QuizWiz</h1>
   <p class="lead">Quiz/Survey application.</p>
-  <p>Click @Html.ActionLink("Register", "Register", "Account") or click @Html.ActionLink("Log in", "Login", "Account")</p>
-  <p><a href="#" class="btn btn-primary btn-large">Create Exam &raquo;</a></p>
+  <p>@Html.ActionLink("Create Exam >>", "Edit", "Exams", null, new { @class="btn btn-primary btn-large" })</p>
 </div>
 
 <h2>Quizzes</h2>
 
 <form class="form-inline" role="form">
-  <input type="search" class="form-control" placeholder="Search quiz">
+  <input type="search" class="form-control" placeholder="Search quiz" data-bind="value: query, valueUpdate: ['input', 'afterkeydown']">
 </form>
+
+<div class="list-group" data-bind="ifnot: exams().length">
+  <div class="list-group-item">
+    No results found.
+  </div>
+</div>
+
+<div class="list-group" data-bind="foreach: exams">
+  <div class="list-group-item">
+    <a href="#" data-bind="text: Name" class="list-group-item-heading"></a>
+    <p class="list-group-item-text">Some description ...</p>
+    <button type="button" class="btn btn-default">Take</button>
+  </div>
+</div>
+
+@section Scripts {
+  @Scripts.Render("~/bundles/jqueryval")
+  @Scripts.Render("~/bundles/ko")
+  <script>
+  var exams = [];
+
+  function ExamsViewModel() {
+    this.query = ko.observable();
+    this.exams = ko.observableArray(exams);
+    this.delayedQuery = ko.computed(this.query).extend({ rateLimit: { method: "notifyWhenChangesStop", timeout: 400 } });
+    this.delayedQuery.subscribe(function (q) {
+      console.log('searching ' + q);
+      if (q !== '')
+        $.getJSON('/Exams/Search', { q: q }, this.exams);
+    }, this);
+  }
+
+  ko.applyBindings(new ExamsViewModel());
+  </script>
+}
