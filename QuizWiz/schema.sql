@@ -17,8 +17,8 @@ create table Question (
     QuestionId integer primary key autoincrement,
     Text text null,
     OrderIndex integer not null,
-    Section_SectionId integer null,
-    foreign key (Section_SectionId) references Section(SectionId)
+    Exam_ExamId integer null,
+    foreign key (Exam_ExamId) references Exam(ExamId)
 );
 create table Response (
     ResponseId integer primary key autoincrement,
@@ -29,12 +29,6 @@ create table Response (
     foreign key (Answer_AnswerId) references Answer(AnswerId),
     foreign key (Question_QuestionId) references Question(QuestionId),
     foreign key (Submission_SubmissionId) references Submission(SubmissionId)
-);
-create table Section (
-    SectionId integer primary key autoincrement,
-    Name text null,
-    Exam_ExamId integer null,
-    foreign key (Exam_ExamId) references Exam(ExamId)
 );
 create table Submission (
     SubmissionId integer primary key autoincrement,

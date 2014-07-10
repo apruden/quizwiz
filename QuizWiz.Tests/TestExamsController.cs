@@ -22,15 +22,14 @@
         public void TestGetQuestion()
         {
             var question = new Question { OrderIndex = 1, QuestionId = 1, Text = "test", Answers = new List<Answer>() };
-            var section = new Section { SectionId = 1, Name = "test", Questions = new List<Question> { question } };
-            var exam = new Exam { ExamId = 1, Name = "test", Sections = new List<Section> { section } };
+            var exam = new Exam { ExamId = 1, Name = "test", Questions = new List<Question> { question } };
             var submission = new Submission { Completed = false, Exam = exam, SubmissionId = 1};
             var data = new List<Exam>{ exam }.AsQueryable();
             var dataSubmissions = new List<Submission> { submission }.AsQueryable();
 
             var mockSet = new Mock<DbSet<Exam>>();
             mockSet.SetupQueryable<Exam>(data);
-            mockSet.Setup(m => m.Include("Sections.Questions")).Callback<string>(
+            mockSet.Setup(m => m.Include("Questions")).Callback<string>(
                 i =>
                 {
                     //nothing to be done.

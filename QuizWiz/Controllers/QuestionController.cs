@@ -39,8 +39,8 @@
         {
             using (var db = this.factory.GetExamContext())
             {
-                var section = (from s in db.Sections.Include("Questions")
-                               where s.SectionId == model.SectionId
+                var exam = (from s in db.Exams.Include("Questions")
+                               where s.ExamId == model.ExamId
                                select s).SingleOrDefault();
 
                 var answers = new List<Answer>();
@@ -53,7 +53,7 @@
                     }
                 }
 
-                section.Questions.Add(new Question { Text = model.Text, OrderIndex = 1, Answers = answers });
+                exam.Questions.Add(new Question { Text = model.Text, OrderIndex = 1, Answers = answers });
                 db.SaveChanges();
             }
 

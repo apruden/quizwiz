@@ -47,7 +47,7 @@
             {
                 using (var db = this.factory.GetExamContext())
                 {
-                    exam = (from e in db.Exams.Include("Sections.Questions.Answers")
+                    exam = (from e in db.Exams.Include("Questions.Answers")
                             where e.ExamId == id.Value
                             select e).SingleOrDefault();
                 }
@@ -55,7 +55,7 @@
 
             if (exam == null)
             {
-                exam = new Exam { Sections = new List<Section> { new Section { Name = "test", Questions = new List<Question>() } } };
+                exam = new Exam { Name = "test", Questions = new List<Question>() };
             }
 
             return View(exam);
@@ -69,11 +69,6 @@
         [HttpPost]
         public ActionResult Edit(Exam exam)
         {
-            if (exam.Sections == null || exam.Sections.Count == 0)
-            {
-                exam.Sections = new List<Section> { new Section { Name = "default" } };
-            }
-
             using (var db = this.factory.GetExamContext())
             {
                 db.Exams.Add(exam);
@@ -110,11 +105,11 @@
 
             using (ExamContext db = this.factory.GetExamContext())
             {
-                var exam = (from e in db.Exams.Include("Sections.Questions.Answers")
+                var exam = (from e in db.Exams.Include("Questions.Answers")
                             where e.ExamId == id
                             select e).FirstOrDefault();
 
-                if (exam == null || exam.Sections.Count == 0 || exam.Sections[0].Questions.Count == 0)
+                if (exam == null || exam.Questions.Count == 0)
                 {
                     return HttpNotFound("Exam not available.");
                 }
@@ -124,7 +119,7 @@
                                   where s.Exam.ExamId == id && s.UserId == this.User.Identity.Name
                                   select s).SingleOrDefault();
 
-                var selectedQuestion = exam.Sections[0].Questions[0];
+                var selectedQuestion = exam.Questions[0];
 
                 if (submission != null)
                 {
@@ -138,7 +133,7 @@
 
                     if (response != null)
                     {
-                        selectedQuestion = (from q in exam.Sections[0].Questions
+                        selectedQuestion = (from q in exam.Questions
                                             where q.OrderIndex > response.Question.OrderIndex
                                             orderby q.OrderIndex
                                             select q).FirstOrDefault() ?? selectedQuestion;
@@ -161,7 +156,6 @@
                 db.SaveChanges();
 
                 model.Submission = submission;
-                model.Section = exam.Sections[0];
                 model.Question = selectedQuestion;
                 model.Name = exam.Name;
             }
@@ -228,16 +222,16 @@
                     }
                 }
 
-                var exam = (from e in db.Exams.Include("Sections.Questions.Answers")
+                var exam = (from e in db.Exams.Include("Questions.Answers")
                             where e.Name == submission.Exam.Name
                             select e).FirstOrDefault();
 
-                nextQuestion = (from q in exam.Sections[0].Questions
+                nextQuestion = (from q in exam.Questions
                                 where q.OrderIndex > question.OrderIndex
                                 orderby q.OrderIndex
                                 select q).FirstOrDefault();
 
-                if (question.OrderIndex == exam.Sections[0].Questions.Count)
+                if (question.OrderIndex == exam.Questions.Count)
                 {
                     submission.Completed = true;
                 }
@@ -275,11 +269,11 @@
                     return new HttpStatusCodeResult(300);
                 }
 
-                var exam = (from e in db.Exams.Include("Sections.Questions")
+                var exam = (from e in db.Exams.Include("Questions")
                             where e.Name == submission.Exam.Name
                             select e).SingleOrDefault();
 
-                model.Question = (from q in exam.Sections[0].Questions
+                model.Question = (from q in exam.Questions
                                   where q.OrderIndex == orderIndex
                                   select q).SingleOrDefault();
             }

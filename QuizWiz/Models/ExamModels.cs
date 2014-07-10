@@ -1,11 +1,11 @@
 ﻿namespace QuizWiz.Models
 {
     using System;
-    using System.Linq;
     using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
     using System.ComponentModel.DataAnnotations.Schema;
     using System.Data.Entity;
+    using System.Linq;
     using System.Reflection;
 
     /// <summary>
@@ -25,11 +25,6 @@
         /// 
         /// </summary>
         public virtual DbSet<Exam> Exams { get; set; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public virtual DbSet<Section> Sections { get; set; }
 
         /// <summary>
         /// 
@@ -104,30 +99,6 @@
         /// 
         /// </summary>
         public bool Private { get; set; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public IList<Section> Sections { get; set; }
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    [Table("Section")]
-    public class Section
-    {
-        /// <summary>
-        /// 
-        /// </summary>
-        [Key]
-        [DatabaseGeneratedAttribute(DatabaseGeneratedOption.Identity)]
-        public long SectionId { get; set; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public string Name { get; set; }
 
         /// <summary>
         /// 
@@ -313,7 +284,7 @@
         /// <summary>
         /// 
         /// </summary>
-        public Section Section { get; set; }
+        public Exam Exam { get; set; }
 
         /// <summary>
         /// 

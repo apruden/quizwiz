@@ -14,7 +14,7 @@
         /// <summary>
         /// 
         /// </summary>
-        public int SectionId { get; set; }
+        public int ExamId { get; set; }
 
         /// <summary>
         /// 

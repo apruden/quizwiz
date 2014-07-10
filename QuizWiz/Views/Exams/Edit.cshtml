@@ -64,9 +64,9 @@
     <div>
       <button type="button" class="btn btn-default" data-bind="click: editQuestion">Edit</button>
       <button type="button" class="btn btn-default" data-bind="click: deleteQuestion">Delete</button>
-      <p data-bind="text: text"></p>
+      <div data-bind="html: text"></div>
       <ul data-bind="foreach: answers">
-        <li data-bind="text: text"></li>
+        <li data-bind="html: text"></li>
       </ul>
     </div>
   </script>
@@ -135,8 +135,6 @@
 
       this.editing = ko.observable(q.Editing || false);
 
-
-
       this.text = ko.observable(q.Text);
 
       this.answers = ko.observableArray(ko.utils.arrayMap(q.Answers || [], function (a) {
@@ -154,7 +152,7 @@
           url: '/Question/Edit',
           type: 'POST',
           dataType: 'json',
-          data: JSON.stringify({ SectionId: 1, Text: self.text(), Answers: answers }),
+          data: JSON.stringify({ExamId: $.exam.ExamId, Text: self.text(), Answers: answers }),
           contentType: "application/json; charset=utf-8",
           success: function (data) {
             alert('saved');
@@ -168,6 +166,12 @@
       this.addAnswer = function () {
         self.answers.push(new AnswerViewModel({ Text: '' }));
       }
+
+      this.editQuestion = function () {
+      };
+
+      this.deleteQuestion = function () {
+      };
     }
 
     /*Exam view model*/
@@ -178,20 +182,12 @@
         return question.editing() ? "editQuestion" : "displayQuestion";
       };
 
-      this.questions = ko.observableArray(ko.utils.arrayMap($.exam.Sections[0].Questions || [], function (q) {
+      this.questions = ko.observableArray(ko.utils.arrayMap($.exam.Questions || [], function (q) {
         return new QuestionViewModel(q);
       }));
 
       this.addQuestion = function () {
         self.questions.push(new QuestionViewModel({ Text: '', Answers: [], Editing : true }));
-      };
-
-      this.editQuestion = function () {
-
-      };
-       
-      this.deleteQuestion = function () {
-
       };
     };
 

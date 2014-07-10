@@ -9,7 +9,7 @@
 @if (Model.Submission != null)
 {
   <input type="hidden" id="SubmissionId" name="SubmissionId" value="@Model.Submission.SubmissionId" data-bind="value: submissionId" />
-  <input type="hidden" id="QuestionsCount" name="QuestionsCount" value="@Model.Section.Questions.Count" data-bind="value: questionsCount" />
+  <input type="hidden" id="QuestionsCount" name="QuestionsCount" value="@Model.Exam.Questions.Count" data-bind="value: questionsCount" />
 }
 else
 {
