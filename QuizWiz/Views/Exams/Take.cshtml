@@ -59,7 +59,7 @@ else
           dataType: 'json',
           data: { SubmissionId: self.submissionId, QuestionId: self.question().QuestionId, AnswerId: self.responseId },
           success: function (data) {
-            if (data) {
+            if (data.HasNext) {
               location.hash = data.OrderIndex;
             }
             else {
@@ -67,12 +67,7 @@ else
             }
           },
           error: function (jqXhr, status, msg) {
-            if (jqXhr.status == 300) {
-              location = '/Exams/Finished';
-            }
-            else {
-              alert("Unexpected error. Contact support.");
-            }
+            alert("Unexpected error. Contact support.");
           }
         });
       };

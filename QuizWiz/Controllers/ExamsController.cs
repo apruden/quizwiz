@@ -107,7 +107,7 @@
             {
                 var exam = (from e in db.Exams.Include("Questions.Answers")
                             where e.ExamId == id
-                            select e).FirstOrDefault();
+                            select e).SingleOrDefault();
 
                 if (exam == null || exam.Questions.Count == 0)
                 {
@@ -158,6 +158,7 @@
                 model.Submission = submission;
                 model.Question = selectedQuestion;
                 model.Name = exam.Name;
+                model.Exam = exam;
             }
 
             return View(model);
@@ -241,11 +242,11 @@
 
             if (nextQuestion != null)
             {
-                return Json(new { OrderIndex = nextQuestion.OrderIndex });
+                return Json(new { HasNext = true,  OrderIndex = nextQuestion.OrderIndex });
             }
             else
             {
-                return Json(null);
+                return Json(new { HasNext = false });
             }
         }
 

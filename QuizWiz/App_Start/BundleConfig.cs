@@ -41,6 +41,15 @@ namespace QuizWiz
             bundles.Add(new ScriptBundle("~/bundles/modernizr").Include(
                         "~/Scripts/modernizr-*"));
 
+            var angularBundle = new ScriptBundle("~/bundles/angular")
+                .Include("~/Scripts/angular.js")
+                .Include("~/Scripts/angular-route.js")
+                .Include("~/Scripts/angular-loader.js");
+
+            angularBundle.Orderer = new NonOrderingBundleOrderer();
+
+            bundles.Add(angularBundle);
+
             bundles.Add(new ScriptBundle("~/bundles/bootstrap").Include(
                       "~/Scripts/bootstrap.js",
                       "~/Scripts/respond.js"));

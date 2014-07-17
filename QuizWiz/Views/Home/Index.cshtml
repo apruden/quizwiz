@@ -23,8 +23,8 @@
 <div class="list-group" data-bind="foreach: exams">
   <div class="list-group-item">
     <a href="#" data-bind="text: Name" class="list-group-item-heading"></a>
-    <p class="list-group-item-text">Some description ...</p>
-    <button type="button" class="btn btn-default">Take</button>
+    <p class="list-group-item-text" data-bind="text: Description"></p>
+    <a href="#" class="btn btn-default" data-bind="attr: { href: '/Exams/Take/' + ExamId }">Take</a>
   </div>
 </div>
 
@@ -37,11 +37,14 @@
   function ExamsViewModel() {
     this.query = ko.observable();
     this.exams = ko.observableArray(exams);
-    this.delayedQuery = ko.computed(this.query).extend({ rateLimit: { method: "notifyWhenChangesStop", timeout: 400 } });
+    this.delayedQuery = ko.computed(this.query).extend({
+      rateLimit: { method: "notifyWhenChangesStop", timeout: 400 }
+    });
     this.delayedQuery.subscribe(function (q) {
       console.log('searching ' + q);
-      if (q !== '')
+      if (q) {
         $.getJSON('/Exams/Search', { q: q }, this.exams);
+      }
     }, this);
   }
 
