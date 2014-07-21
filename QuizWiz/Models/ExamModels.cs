@@ -60,7 +60,7 @@
 
                   foreach (var p in nonPublicProperties)
                   {
-                      c.Property(p).HasColumnName(p.Name.First() + string.Join("", p.Name.Skip(1)));
+                      c.Property(p).HasColumnName(Char.ToUpper(p.Name.First()) + string.Join("", p.Name.Skip(1)));
                   }
               });
         }
@@ -104,6 +104,11 @@
         /// 
         /// </summary>
         public IList<Question> Questions { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int Duration { get; set; }
     }
 
     /// <summary>
@@ -171,14 +176,14 @@
     public class Submission
     {
         /// <summary>
-        /// 
+        /// Mapped on OnModelCreating in ExamContext class.
         /// </summary>
-        private string heartbeat;
+        private string heartbeat { get; set; }
 
         /// <summary>
-        /// 
+        /// Mapped on OnModelCreating in ExamContext class.
         /// </summary>
-        private int elapsed;
+        private int elapsed { get; set; }
 
         /// <summary>
         /// 
@@ -210,7 +215,51 @@
 
             set
             {
-                this.heartbeat = value.ToShortTimeString();
+                this.heartbeat = value.ToString("u");
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private string started { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        [NotMapped]
+        public DateTime Started
+        {
+            get
+            {
+                return DateTime.Parse(this.started);
+            }
+
+            set
+            {
+                this.started = value.ToString("u");
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private string finished { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        [NotMapped]
+        public DateTime Finished
+        {
+            get
+            {
+                return DateTime.Parse(this.finished);
+            }
+
+            set
+            {
+                this.finished = value.ToString("u");
             }
         }
 
@@ -230,11 +279,6 @@
                 this.elapsed = value.Seconds;
             }
         }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public bool Completed { get; set; }
 
         /// <summary>
         /// 
@@ -299,13 +343,13 @@
         /// <summary>
         /// 
         /// </summary>
-        [NotMapped]
-        public TimeSpan Elapsed { 
-            get 
+        public TimeSpan Elapsed
+        {
+            get
             {
                 return TimeSpan.FromSeconds(this.elapsed);
             }
-            set 
+            set
             {
                 this.elapsed = value.Seconds;
             }

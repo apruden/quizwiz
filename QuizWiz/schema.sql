@@ -11,7 +11,8 @@ create table Exam (
     Name text null,
 	Description text null,
     AllowRetries boolean not null,
-	Private boolean not null
+	Private boolean not null,
+	Duration integer not null
 );
 create table Question (
     QuestionId integer primary key autoincrement,
@@ -32,8 +33,11 @@ create table Response (
 );
 create table Submission (
     SubmissionId integer primary key autoincrement,
-    Completed boolean not null,
     Exam_ExamId integer null,
     UserId text null,
+	Elapsed integer not null,
+	Heartbeat text null,
+	Started text null,
+	Finished text null,
     foreign key (Exam_ExamId) references Exam(ExamId)
 );

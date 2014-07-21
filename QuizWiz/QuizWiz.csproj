@@ -768,7 +768,6 @@
     <Content Include="Views\Account\_ExternalLoginsListPartial.cshtml" />
     <Content Include="Views\_ViewStart.cshtml" />
     <Content Include="Views\Exams\Finished.cshtml" />
-    <Content Include="Views\Exams\Index.cshtml" />
     <Content Include="Views\Exams\Take.cshtml" />
     <Content Include="Views\Question\Add.cshtml" />
   </ItemGroup>

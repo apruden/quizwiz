@@ -1,10 +1,16 @@
-﻿using System.Collections.Generic;
-using System.Web.Optimization;
-
-namespace QuizWiz
+﻿namespace QuizWiz
 {
+    using System.Collections.Generic;
+    using System.Web.Optimization;
+
+    /// <summary>
+    /// 
+    /// </summary>
     public class BundleConfig
     {
+        /// <summary>
+        /// 
+        /// </summary>
         class NonOrderingBundleOrderer : IBundleOrderer
         {
             public IEnumerable<BundleFile> OrderFiles(BundleContext context, IEnumerable<BundleFile> files)
@@ -13,7 +19,10 @@ namespace QuizWiz
             }
         }
 
-        // For more information on bundling, visit http://go.microsoft.com/fwlink/?LinkId=301862
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="bundles"></param>
         public static void RegisterBundles(BundleCollection bundles)
         {
             bundles.Add(new ScriptBundle("~/bundles/jqueryui").Include(
@@ -36,8 +45,6 @@ namespace QuizWiz
             bundles.Add(new ScriptBundle("~/bundles/ko").Include(
                         "~/Scripts/knockout-*", "~/Scripts/sammy-*"));
 
-            // Use the development version of Modernizr to develop with and learn from. Then, when you're
-            // ready for production, use the build tool at http://modernizr.com to pick only the tests you need.
             bundles.Add(new ScriptBundle("~/bundles/modernizr").Include(
                         "~/Scripts/modernizr-*"));
 

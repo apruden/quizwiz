@@ -28,13 +28,13 @@ else
 </div>
 
 <script type="text/html" id="question-template">
-  <h3 data-bind="text: Text"></h3>
+  <h3 data-bind="html: Text"></h3>
   <div data-bind="template: { name: 'answer-template', foreach: Answers, as: 'answer' }"></div>
 </script>
 
 <script type="text/html" id="answer-template">
   <p>
-    <input data-bind="value: AnswerId, checked: $root.responseId" name="answerGroup" type="radio" value="" /><span data-bind="text: Text"></span>
+    <input data-bind="value: AnswerId, checked: $root.responseId" name="answerGroup" type="radio" value="" /><span data-bind="html: Text"></span>
   </p>
 </script>
 
@@ -119,9 +119,9 @@ else
         });
       };
 
-      setInterval(self.tick, 3000);
+      setInterval(self.tick, 1000);
 
-      setInterval(self.heartbeat, 60000);
+      setInterval(self.heartbeat, 5000);
 
       Sammy(function () {
         this.get('#:orderIndex', function () {

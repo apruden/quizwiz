@@ -18,7 +18,7 @@
     public class ExamsController : Controller
     {
         private IContextFactory factory = new ContextFactory();
-        
+
         /// <summary>
         /// 
         /// </summary>
@@ -58,7 +58,7 @@
                 exam = new Exam { Name = "test", Questions = new List<Question>() };
             }
 
-            return View(exam);
+            return this.View(exam);
         }
 
         /// <summary>
@@ -76,22 +76,6 @@
             }
 
             return new EmptyResult();
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public ActionResult Index()
-        {
-            var model = new ExamIndexModel();
-
-            using (ExamContext db = this.factory.GetExamContext())
-            {
-                model.Exams = db.Exams.ToList();
-            }
-
-            return View(model);
         }
 
         /// <summary>
@@ -123,9 +107,9 @@
 
                 if (submission != null)
                 {
-                    if (submission.Elapsed > TimeSpan.FromMinutes(20) || submission.Completed)
+                    if (submission.Elapsed > TimeSpan.FromMinutes(20) || submission.Finished != null)
                     {
-                        return Redirect("/Exams/Finished");
+                        return this.RedirectToAction("Finished", "Exams");
                     }
 
                     submission.Elapsed += TimeSpan.FromSeconds(90);
@@ -143,6 +127,7 @@
                 {
                     submission = new Submission
                         {
+                            Started = DateTime.UtcNow,
                             Elapsed = new TimeSpan(0, 0, 0),
                             Heartbeat = DateTime.UtcNow,
                             Exam = exam,
@@ -161,7 +146,7 @@
                 model.Exam = exam;
             }
 
-            return View(model);
+            return this.View(model);
         }
 
         /// <summary>
@@ -170,7 +155,7 @@
         /// <returns></returns>
         public ActionResult Finished()
         {
-            return View();
+            return this.View();
         }
 
         /// <summary>
@@ -234,7 +219,7 @@
 
                 if (question.OrderIndex == exam.Questions.Count)
                 {
-                    submission.Completed = true;
+                    submission.Finished = DateTime.UtcNow;
                 }
 
                 db.SaveChanges();
@@ -242,11 +227,11 @@
 
             if (nextQuestion != null)
             {
-                return Json(new { HasNext = true,  OrderIndex = nextQuestion.OrderIndex });
+                return this.Json(new { HasNext = true, OrderIndex = nextQuestion.OrderIndex });
             }
             else
             {
-                return Json(new { HasNext = false });
+                return this.Json(new { HasNext = false });
             }
         }
 
@@ -261,16 +246,16 @@
 
             using (ExamContext db = this.factory.GetExamContext())
             {
-                var submission = (from s in db.Submissions
+                var submission = (from s in db.Submissions.Include("Exam")
                                   where s.SubmissionId == submissionId
-                                  select s).SingleOrDefault();
+                                  select s).FirstOrDefault();
 
                 if (submission != null && submission.Elapsed > TimeSpan.FromMinutes(20))
                 {
                     return new HttpStatusCodeResult(300);
                 }
 
-                var exam = (from e in db.Exams.Include("Questions")
+                var exam = (from e in db.Exams.Include("Questions.Answers")
                             where e.Name == submission.Exam.Name
                             select e).SingleOrDefault();
 
@@ -279,7 +264,7 @@
                                   select q).SingleOrDefault();
             }
 
-            return Json(model, JsonRequestBehavior.AllowGet);
+            return this.Json(model, JsonRequestBehavior.AllowGet);
         }
 
         /// <summary>
@@ -294,10 +279,13 @@
                                   where s.SubmissionId == submissionId
                                   select s).SingleOrDefault();
 
-                TimeSpan delta = TimeSpan.FromSeconds(60);
-                submission.Elapsed += delta;
+                if (submission != null)
+                {
+                    TimeSpan delta = TimeSpan.FromSeconds(5);
+                    submission.Elapsed += delta;
 
-                db.SaveChanges();
+                    db.SaveChanges();
+                }
             }
 
             return new EmptyResult();
@@ -308,6 +296,7 @@
         /// </summary>
         /// <param name="q"></param>
         /// <returns></returns>
+        [AllowAnonymous]
         public ActionResult Search(string q)
         {
             var exams = new List<Exam>();
@@ -315,11 +304,11 @@
             using (var db = this.factory.GetExamContext())
             {
                 exams = (from e in db.Exams
-                             where e.Name.Contains(q)
-                             select e).Take(20).ToList();
+                         where e.Name.Contains(q)
+                         select e).Take(20).ToList();
             }
 
-            return Json(exams, JsonRequestBehavior.AllowGet);
+            return this.Json(exams, JsonRequestBehavior.AllowGet);
         }
 
         /// <summary>
@@ -335,25 +324,24 @@
                 {
                     ModelState.AddModelError("submission", "The size of the file should not exceed 10 KB");
 
-                    return View();
+                    return this.View();
                 }
 
                 var supportedTypes = new[] { "zip", "7z", "rar", "gz" };
-
                 var fileExt = Path.GetExtension(submission.FileName).Substring(1);
 
                 if (!supportedTypes.Contains(fileExt))
                 {
                     ModelState.AddModelError("submission", "Invalid type. Only the following types (zip, 7z, rar, gz) are supported.");
 
-                    return View();
+                    return this.View();
                 }
 
                 submission.SaveAs(Path.Combine(ConfigurationManager.AppSettings["FilesRoot"],
                      string.Format("{0}_{1}_{2}", name, this.User.Identity.Name, submission.FileName)));
             }
 
-            return Redirect("/");
+            return this.RedirectToAction("Index", "Home");
         }
     }
 }

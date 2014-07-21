@@ -151,7 +151,6 @@
         $.ajax({
           url: '/Question/Edit',
           type: 'POST',
-          dataType: 'json',
           data: JSON.stringify({ExamId: $.exam.ExamId, Text: self.text(), Answers: answers }),
           contentType: "application/json; charset=utf-8",
           success: function (data) {

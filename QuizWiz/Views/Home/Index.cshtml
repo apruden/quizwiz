@@ -2,52 +2,54 @@
   ViewBag.Title = "QuizWiz";
 }
 
-<div class="jumbotron">
-  <h1>QuizWiz</h1>
-  <p class="lead">Quiz/Survey application.</p>
-  <p>@Html.ActionLink("Create Exam >>", "Edit", "Exams", null, new { @class="btn btn-primary btn-large" })</p>
-</div>
-
-<h2>Quizzes</h2>
-
-<form class="form-inline" role="form">
-  <input type="search" class="form-control" placeholder="Search quiz" data-bind="value: query, valueUpdate: ['input', 'afterkeydown']">
-</form>
-
-<div class="list-group" data-bind="ifnot: exams().length">
-  <div class="list-group-item">
-    No results found.
+<div class="row">
+  <div class="col-xs-12">
+    <p>@Html.ActionLink("Create Exam >>", "Edit", "Exams", null, new { @class = "btn btn-primary btn-large" })</p>
   </div>
 </div>
-
-<div class="list-group" data-bind="foreach: exams">
-  <div class="list-group-item">
-    <a href="#" data-bind="text: Name" class="list-group-item-heading"></a>
-    <p class="list-group-item-text" data-bind="text: Description"></p>
-    <a href="#" class="btn btn-default" data-bind="attr: { href: '/Exams/Take/' + ExamId }">Take</a>
+<div class="row">
+  <div class="col-xs-12">
+    <form class="form-inline" role="form">
+      <input type="search" class="form-control" placeholder="Search quiz" data-bind="value: query, valueUpdate: ['input', 'afterkeydown']">
+    </form>
   </div>
 </div>
-
+<div class="row">
+  <div class="col-xs-12">
+    <div class="list-group" data-bind="ifnot: exams().length">
+      <div class="list-group-item">
+        No results found.
+      </div>
+    </div>
+    <div class="list-group" data-bind="foreach: exams">
+      <div class="list-group-item">
+        <a href="#" data-bind="text: Name" class="list-group-item-heading"></a>
+        <p class="list-group-item-text" data-bind="text: Description"></p>
+        <a href="#" class="btn btn-default" data-bind="attr: { href: '/Exams/Take/' + ExamId }">Take</a>
+      </div>
+    </div>
+  </div>
+</div>
 @section Scripts {
   @Scripts.Render("~/bundles/jqueryval")
   @Scripts.Render("~/bundles/ko")
   <script>
-  var exams = [];
+    var exams = [];
 
-  function ExamsViewModel() {
-    this.query = ko.observable();
-    this.exams = ko.observableArray(exams);
-    this.delayedQuery = ko.computed(this.query).extend({
-      rateLimit: { method: "notifyWhenChangesStop", timeout: 400 }
-    });
-    this.delayedQuery.subscribe(function (q) {
-      console.log('searching ' + q);
-      if (q) {
-        $.getJSON('/Exams/Search', { q: q }, this.exams);
-      }
-    }, this);
-  }
+    function ExamsViewModel() {
+      this.query = ko.observable();
+      this.exams = ko.observableArray(exams);
+      this.delayedQuery = ko.computed(this.query).extend({
+        rateLimit: { method: "notifyWhenChangesStop", timeout: 400 }
+      });
+      this.delayedQuery.subscribe(function (q) {
+        console.log('searching ' + q);
+        if (q) {
+          $.getJSON('/Exams/Search', { q: q }, this.exams);
+        }
+      }, this);
+    }
 
-  ko.applyBindings(new ExamsViewModel());
+    ko.applyBindings(new ExamsViewModel());
   </script>
 }
