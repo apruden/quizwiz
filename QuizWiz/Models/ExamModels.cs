@@ -109,6 +109,11 @@
         /// 
         /// </summary>
         public int Duration { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string UserId { get; set; }
     }
 
     /// <summary>

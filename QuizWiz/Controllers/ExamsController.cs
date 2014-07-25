@@ -294,6 +294,33 @@
         /// <summary>
         /// 
         /// </summary>
+        /// <returns></returns>
+        public ActionResult ShowMe()
+        {
+            return this.View("Index");
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public ActionResult Me(int offset, int limit)
+        {
+            var exams = new List<Exam>();
+
+            using (var db = this.factory.GetExamContext())
+            {
+                exams = (from e in db.Exams
+                         where e.UserId == this.User.Identity.Name
+                         select e).OrderBy(a => a.ExamId).Skip(offset).Take(limit).ToList();
+            }
+
+            return this.Json(exams, JsonRequestBehavior.AllowGet);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="q"></param>
         /// <returns></returns>
         [AllowAnonymous]

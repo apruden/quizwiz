@@ -55,10 +55,6 @@
   <!-- /ko -->
 }
 
-<div>
-  @Html.ActionLink("Back to List", "Index")
-</div>
-
 @section Scripts {
   <script id="displayQuestion" type="text/html">
     <div>
@@ -71,23 +67,24 @@
     </div>
   </script>
   <script id="editQuestion" type="text/html">
-  <form class="form-horizontal" role="form">
-    <fieldset>
-      <legend>Question</legend>
-      <div class="form-group">
-        <textarea data-bind="attr: { 'id': 'q_' + $index()}, richText: text" class="form-control"></textarea>
-      </div>
-      <h3>Answers</h3>
-      <div data-bind="foreach: answers">
+    <form class="form-horizontal" role="form">
+      <fieldset>
+        <legend>Question</legend>
         <div class="form-group">
-          <label>Answer #</label>
-          <textarea data-bind="attr: { 'id': 'a_' + $index()}, richText: text" class="form-control"></textarea>
+          <textarea data-bind="attr: { 'id': 'q_' + $index()}, richText: text" class="form-control"></textarea>
         </div>
-      </div>
-      <button type="button" data-bind="click: addAnswer" class="btn btn-default">Add answer</button>
-      <button data-bind="click: save" class="btn btn-primary">Save</button>
-    </fieldset>
-  </form>
+        <h3>Answers</h3>
+        <div data-bind="foreach: answers">
+          <div class="form-group">
+            <label>Answer #<span data-bind="text: $index() + 1"></span></label>
+            <input type="text" data-bind="value: points" class="form-control"/>
+            <textarea data-bind="attr: { 'id': 'a_' + $index()}, richText: text" class="form-control"></textarea>
+          </div>
+        </div>
+        <button type="button" data-bind="click: addAnswer" class="btn btn-default">Add answer</button>
+        <button data-bind="click: save" class="btn btn-primary">Save</button>
+      </fieldset>
+    </form>
   </script>
 
   @Scripts.Render("~/bundles/jqueryval")
@@ -128,15 +125,13 @@
     function AnswerViewModel(a) {
       var self = this;
       this.text = ko.observable(a.Text);
+      this.points = ko.observable(a.Points);
     };
 
     function QuestionViewModel(q) {
       var self = this;
-
       this.editing = ko.observable(q.Editing || false);
-
       this.text = ko.observable(q.Text);
-
       this.answers = ko.observableArray(ko.utils.arrayMap(q.Answers || [], function (a) {
         return new AnswerViewModel(a);
       }));
@@ -151,13 +146,13 @@
         $.ajax({
           url: '/Question/Edit',
           type: 'POST',
-          data: JSON.stringify({ExamId: $.exam.ExamId, Text: self.text(), Answers: answers }),
+          data: JSON.stringify({ ExamId: $.exam.ExamId, Text: self.text(), Answers: answers }),
           contentType: "application/json; charset=utf-8",
           success: function (data) {
-            alert('saved');
+            alert('Saved');
           },
           error: function (jqXhr, status, msg) {
-            alert('errr');
+            alert('Error');
           }
         });
       };
@@ -186,7 +181,7 @@
       }));
 
       this.addQuestion = function () {
-        self.questions.push(new QuestionViewModel({ Text: '', Answers: [], Editing : true }));
+        self.questions.push(new QuestionViewModel({ Text: '', Answers: [], Editing: true }));
       };
     };
 

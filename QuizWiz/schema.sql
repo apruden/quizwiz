@@ -12,7 +12,8 @@ create table Exam (
 	Description text null,
     AllowRetries boolean not null,
 	Private boolean not null,
-	Duration integer not null
+	Duration integer not null,
+	UserId text null
 );
 create table Question (
     QuestionId integer primary key autoincrement,

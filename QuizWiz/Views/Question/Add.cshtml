@@ -10,8 +10,7 @@
 {
   @Html.ValidationSummary(true)
   <fieldset>
-    <legend>QuestionEditModel</legend>
-
+    <legend>Question</legend>
     <div class="editor-label">
       @Html.LabelFor(model => model.Text)
     </div>
@@ -24,10 +23,6 @@
     </p>
   </fieldset>
 }
-
-<div>
-  @Html.ActionLink("Back to List", "Index")
-</div>
 
 @section Scripts {
   @Scripts.Render("~/bundles/jqueryval")

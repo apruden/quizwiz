@@ -1,0 +1,46 @@
+﻿@{
+  ViewBag.Title = "QuizWiz";
+}
+
+<div class="row">
+  <div class="col-xs-12">
+    <p>@Html.ActionLink("Create Exam >>", "Edit", "Exams", null, new { @class = "btn btn-primary btn-large" })</p>
+  </div>
+</div>
+<div class="row">
+  <div class="col-xs-12">
+    <div class="list-group" data-bind="ifnot: exams().length">
+      <div class="list-group-item">
+        No results found.
+      </div>
+    </div>
+    <div class="list-group" data-bind="foreach: exams">
+      <div class="list-group-item">
+        <a href="#" data-bind="text: Name" class="list-group-item-heading"></a>
+        <p class="list-group-item-text" data-bind="text: Description"></p>
+        <a href="#" class="btn btn-default" data-bind="attr: { href: '/exams/edit/' + ExamId }">Edit</a>
+        <a href="#" class="btn btn-default" data-bind="attr: { href: '/exams/delete/' + ExamId }">Delete</a>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-lg" data-bind="click: getNext">More</button>
+  </div>
+</div>
+@section Scripts {
+  @Scripts.Render("~/bundles/jqueryval")
+  @Scripts.Render("~/bundles/ko")
+  <script>
+    var exams = [];
+
+    function ExamsViewModel() {
+      var self = this;
+      self.exams = ko.observableArray(exams);
+      self.offset = 0;
+      self.getNext = function () {
+        $.getJSON('/Exams/Me', { offset: self.offset, limit: 20 }, this.exams);
+        self.offset += 20;
+      };
+    }
+
+    ko.applyBindings(new ExamsViewModel());
+  </script>
+}

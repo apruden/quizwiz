@@ -1,6 +1,7 @@
 ﻿namespace QuizWiz.Web
 {
     using System;
+    using System.Configuration;
     using System.IO;
     using System.Threading;
     using System.Web;
@@ -34,7 +35,6 @@
         /// <param name="e"></param>
         void context_EndRequest(object sender, EventArgs e)
         {
-            
         }
 
         /// <summary>
@@ -47,7 +47,7 @@
             HttpApplication application = sender as HttpApplication;
             application.Context.Response.Filter = new StreamCounter(application.Context.Response.Filter);
 
-            if (Global.bytesSent > 2000000)
+            if (Global.bytesSent > int.Parse(ConfigurationManager.AppSettings["BytesSentLimit"]))
             {
                 application.Context.Response.Close();
             }

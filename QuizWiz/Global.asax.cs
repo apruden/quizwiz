@@ -30,16 +30,9 @@
         /// <param name="sender"></param>
         private void OnTimerElapsed(object sender)
         {
-            bool updated = false;
-            long bytesSent = 0;
-
             try
             {
-                lock (lockObj)
-                {
-                    bytesSent = Interlocked.Read(ref Global.bytesSent);
-                    Interlocked.Add(ref Global.bytesSent, -bytesSent);
-                }
+                var bytesSent = Interlocked.Read(ref Global.bytesSent);
 
                 using (var conn = new SQLiteConnection(ConfigurationManager.ConnectionStrings["DefaultConnection"].ConnectionString))
                 {
@@ -47,19 +40,13 @@
 
                     using (var cmd = conn.CreateCommand())
                     {
-                        cmd.CommandText = "UPDATE Stats SET Value = Value + " + bytesSent + " WHERE Name = 'BytesSent'";
+                        cmd.CommandText = "UPDATE Stats SET Value = " + bytesSent + " WHERE Name = 'BytesSent'";
                         cmd.ExecuteNonQuery();
-                        updated = true;
                     }
                 }
             }
             catch (Exception e)
             {
-                if (updated)
-                {
-                    Interlocked.Add(ref Global.bytesSent, bytesSent);
-                }
-
                 Console.WriteLine(e.ToString());
             }
         }
@@ -73,6 +60,19 @@
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
+
+            using (var conn = new SQLiteConnection(ConfigurationManager.ConnectionStrings["DefaultConnection"].ConnectionString))
+            {
+                conn.Open();
+
+                using (var cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = "SELECT Value FROM Stats WHERE Name = 'BytesSent'";
+                    var res = cmd.ExecuteScalar();
+                    Global.bytesSent = (long)res;
+                }
+            }
+
             this.timer = new Timer(OnTimerElapsed);
             this.timer.Change(TimeSpan.Zero, TimeSpan.FromMinutes(1));
         }

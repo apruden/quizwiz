@@ -15,27 +15,5 @@
         {
             return View();
         }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>]
-        public ActionResult About()
-        {
-            ViewBag.Message = "QuizWiz";
-
-            return View();
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public ActionResult Contact()
-        {
-            ViewBag.Message = "QuizWiz";
-
-            return View();
-        }
     }
 }
