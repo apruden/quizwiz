@@ -25,45 +25,24 @@
         /// <param name="bundles"></param>
         public static void RegisterBundles(BundleCollection bundles)
         {
-            bundles.Add(new ScriptBundle("~/bundles/jqueryui").Include(
-                        "~/Scripts/jquery-ui-{version}.js"));
+            bundles.UseCdn = true;
+            bundles.Add(new ScriptBundle("~/bundles/jqueryui", "//ajax.googleapis.com/ajax/libs/jqueryui/1.11.0/jquery-ui.min.js"));
+            bundles.Add(new ScriptBundle("~/bundles/jquery", "//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"));
+            bundles.Add(new ScriptBundle("~/bundles/jqueryval", "//cachedcommons.org/cache/jquery-validate/1.7.0/javascripts/jquery-validate-min.js"));
+            bundles.Add(new ScriptBundle("~/bundles/ckeditor", "//cdn.ckeditor.com/4.4.3/standard/ckeditor.js"));
 
-            bundles.Add(new ScriptBundle("~/bundles/jquery").Include(
-                        "~/Scripts/jquery-{version}.js"));
-            
-            bundles.Add(new ScriptBundle("~/bundles/jqueryval").Include(
-                        "~/Scripts/jquery.validate*"));
-
-            var ckBundle = new ScriptBundle("~/bundles/ckeditor")
-                .Include("~/Scripts/ckeditor/ckeditor.js")
+            var ckBundle = new ScriptBundle("~/bundles/ckeditor_jquery")
                 .Include("~/Scripts/ckeditor/adapters/jquery.js");
-
             ckBundle.Orderer = new NonOrderingBundleOrderer();
-
             bundles.Add(ckBundle);
-             
-            bundles.Add(new ScriptBundle("~/bundles/ko").Include(
-                        "~/Scripts/knockout-*", "~/Scripts/sammy-*"));
 
-            bundles.Add(new ScriptBundle("~/bundles/modernizr").Include(
-                        "~/Scripts/modernizr-*"));
-
-            var angularBundle = new ScriptBundle("~/bundles/angular")
-                .Include("~/Scripts/angular.js")
-                .Include("~/Scripts/angular-route.js")
-                .Include("~/Scripts/angular-loader.js");
-
-            angularBundle.Orderer = new NonOrderingBundleOrderer();
-
-            bundles.Add(angularBundle);
-
-            bundles.Add(new ScriptBundle("~/bundles/bootstrap").Include(
-                      "~/Scripts/bootstrap.js",
-                      "~/Scripts/respond.js"));
-
-            bundles.Add(new StyleBundle("~/Content/css").Include(
-                      "~/Content/bootstrap.css",
-                      "~/Content/site.css"));
+            bundles.Add(new ScriptBundle("~/bundles/ko", "//cdnjs.cloudflare.com/ajax/libs/knockout/3.1.0/knockout-min.js"));
+            bundles.Add(new ScriptBundle("~/bundles/sammy", "//cdnjs.cloudflare.com/ajax/libs/sammy.js/0.7.4/sammy.min.js"));
+            bundles.Add(new ScriptBundle("~/bundles/modernizr", "//cachedcommons.org/cache/modernizr/1.5.0/javascripts/modernizr-min.js"));
+            bundles.Add(new ScriptBundle("~/bundles/bootstrap", "//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"));
+            bundles.Add(new ScriptBundle("~/bundles/respond", "//cdnjs.cloudflare.com/ajax/libs/respond.js/1.4.2/respond.js"));
+            bundles.Add(new StyleBundle("~/Content/bootstrap_css", "//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css"));
+            bundles.Add(new StyleBundle("~/Content/css").Include("~/Content/site.css"));
         }
     }
 }
