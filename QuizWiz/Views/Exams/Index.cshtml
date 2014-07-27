@@ -2,7 +2,7 @@
   ViewBag.Title = "QuizWiz";
 }
 
-<div class="row">
+<div class="row voffset">
   <div class="col-xs-12">
     <p>@Html.ActionLink("Create Exam >>", "Edit", "Exams", null, new { @class = "btn btn-primary btn-large" })</p>
   </div>
@@ -26,8 +26,6 @@
   </div>
 </div>
 @section Scripts {
-  @Scripts.Render("~/bundles/jqueryval")
-  @Scripts.Render("~/bundles/ko")
   <script>
     var exams = [];
 
@@ -36,7 +34,12 @@
       self.exams = ko.observableArray(exams);
       self.offset = 0;
       self.getNext = function () {
-        $.getJSON('/Exams/Me', { offset: self.offset, limit: 20 }, this.exams);
+        $.getJSON('/Exams/Me', { offset: self.offset, limit: 20 }, function (exams) {
+          var i;
+          for (i = 0; i < exams.length; i++) {
+            self.exams.push(exams[i]);
+          }
+        });
         self.offset += 20;
       };
     }

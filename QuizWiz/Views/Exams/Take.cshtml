@@ -39,7 +39,6 @@ else
 </script>
 
 @section Scripts {
-  @Scripts.Render("~/bundles/ko")
   <script>
     $.enableExam = {};
     $.enableExam.question = JSON.parse('@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Question))');

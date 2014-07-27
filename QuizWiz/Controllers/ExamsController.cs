@@ -55,7 +55,7 @@
 
             if (exam == null)
             {
-                exam = new Exam { Name = "test", Questions = new List<Question>() };
+                exam = new Exam { Name = "", Questions = new List<Question>() };
             }
 
             return this.View(exam);
@@ -69,6 +69,8 @@
         [HttpPost]
         public ActionResult Edit(Exam exam)
         {
+            exam.UserId = this.User.Identity.Name;
+
             using (var db = this.factory.GetExamContext())
             {
                 db.Exams.Add(exam);
@@ -107,7 +109,7 @@
 
                 if (submission != null)
                 {
-                    if (submission.Elapsed > TimeSpan.FromMinutes(20) || submission.Finished != null)
+                    if (submission.Elapsed > TimeSpan.FromMinutes(exam.Duration) || submission.Finished != null)
                     {
                         return this.RedirectToAction("Finished", "Exams");
                     }

@@ -115,13 +115,13 @@
                     {
                         var result = await UserManager.AddToRolesAsync(user.Id, selectedRoles);
 
-                        if (!result.Succeeded)
-                        {
-                            ModelState.AddModelError("", result.Errors.First());
-                            ViewBag.RoleId = new SelectList(await RoleManager.Roles.ToListAsync(), "Name", "Name");
+                        //if (!result.Succeeded)
+                        //{
+                        //    ModelState.AddModelError("", result.Errors.First());
+                        //    ViewBag.RoleId = new SelectList(await RoleManager.Roles.ToListAsync(), "Name", "Name");
 
-                            return View();
-                        }
+                        //    return View();
+                        //}
                     }
                 }
                 else
@@ -191,23 +191,23 @@
 
                 selectedRole = selectedRole ?? new string[] { };
 
-                var result = await UserManager.AddToRolesAsync(user.Id, selectedRole.Except(userRoles).ToArray<string>());
+                //var result = await UserManager.AddToRolesAsync(user.Id, selectedRole.Except(userRoles).ToArray<string>());
 
-                if (!result.Succeeded)
-                {
-                    ModelState.AddModelError("", result.Errors.First());
+                //if (!result.Succeeded)
+                //{
+                //    ModelState.AddModelError("", result.Errors.First());
 
-                    return View();
-                }
+                //    return View();
+                //}
 
-                result = await UserManager.RemoveFromRolesAsync(user.Id, userRoles.Except(selectedRole).ToArray<string>());
+                //result = await UserManager.RemoveFromRolesAsync(user.Id, userRoles.Except(selectedRole).ToArray<string>());
 
-                if (!result.Succeeded)
-                {
-                    ModelState.AddModelError("", result.Errors.First());
+                //if (!result.Succeeded)
+                //{
+                //    ModelState.AddModelError("", result.Errors.First());
 
-                    return View();
-                }
+                //    return View();
+                //}
 
                 return RedirectToAction("Index");
             }

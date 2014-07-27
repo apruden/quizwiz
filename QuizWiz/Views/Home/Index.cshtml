@@ -2,14 +2,14 @@
   ViewBag.Title = "QuizWiz";
 }
 
-<div class="row">
+<div class="row voffset">
   <div class="col-xs-12">
     <p>@Html.ActionLink("Create Exam >>", "Edit", "Exams", null, new { @class = "btn btn-primary btn-large" })</p>
   </div>
 </div>
 <div class="row">
   <div class="col-xs-12">
-    <form class="form-inline" role="form">
+    <form role="form">
       <input type="search" class="form-control" placeholder="Search quiz" data-bind="value: query, valueUpdate: ['input', 'afterkeydown']">
     </form>
   </div>
@@ -36,8 +36,6 @@
   </div>
 </div>
 @section Scripts {
-  @Scripts.Render("~/bundles/jqueryval")
-  @Scripts.Render("~/bundles/ko")
   <script>
     var exams = [];
 
