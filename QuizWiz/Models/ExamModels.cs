@@ -21,6 +21,8 @@
         {
         }
 
+        public virtual DbSet<Setting> Settings { get; set; }
+
         /// <summary>
         /// 
         /// </summary>

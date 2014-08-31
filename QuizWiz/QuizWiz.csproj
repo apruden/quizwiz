@@ -112,6 +112,7 @@
     <Reference Include="System.Data.SQLite.Linq">
       <HintPath>..\packages\System.Data.SQLite.Linq.1.0.92.0\lib\net45\System.Data.SQLite.Linq.dll</HintPath>
     </Reference>
+    <Reference Include="System.Net" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Net.Http.WebRequest" />
     <Reference Include="System.Web.DynamicData" />
@@ -168,11 +169,13 @@
     <Content Include="Views\Exams\Edit.cshtml" />
     <Content Include="App_Data\quizwiz.db" />
     <Content Include="Local.config" />
+    <Content Include="MailSettings.config" />
     <None Include="Properties\PublishProfiles\quizwiz.pubxml" />
     <Content Include="Views\Shared\EditorTemplates\String.cshtml" />
     <Content Include="Views\Shared\EditorTemplates\MultilineText.cshtml" />
     <Content Include="Views\Exams\Index.cshtml" />
     <Content Include="Views\Shared\EditorTemplates\Integer.cshtml" />
+    <Content Include="Views\Account\AcceptInvitation.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -252,6 +255,7 @@
     </Compile>
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\AdminViewModel.cs" />
+    <Compile Include="Models\ConfigContext.cs" />
     <Compile Include="Models\ContextFactory.cs" />
     <Compile Include="Models\ExamModels.cs" />
     <Compile Include="Models\IdentityModels.cs" />

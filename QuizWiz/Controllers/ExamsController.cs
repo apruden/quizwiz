@@ -7,6 +7,9 @@
     using System.Configuration;
     using System.IO;
     using System.Linq;
+    using System.Net.Mail;
+    using System.Security.Cryptography;
+    using System.Text;
     using System.Web;
     using System.Web.Mvc;
 
@@ -83,6 +86,25 @@
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="exam"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public ActionResult Delete(Exam exam)
+        {
+            exam.UserId = this.User.Identity.Name;
+
+            using (var db = this.factory.GetExamContext())
+            {
+                db.Exams.Remove(exam);
+                db.SaveChanges();
+            }
+
+            return new EmptyResult();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
         public ActionResult Take(long id, string slug)
@@ -149,6 +171,66 @@
             }
 
             return this.View(model);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="recipients"></param>
+        /// <returns></returns>
+        public ActionResult Invite(string recipients, int examId)
+        {
+            string body, subject;
+            string[] recipientsList = (from r in recipients.Split(',')
+                                       select r.Trim()).ToArray();
+
+            using (var config = this.factory.GetExamContext())
+            {
+                body = (from s in config.Settings
+                        where s.Name == "InvitationBody"
+                        select s.Value).SingleOrDefault() ?? "{0}";
+
+                subject = (from s in config.Settings
+                        where s.Name == "InvitationSubject"
+                        select s.Value).SingleOrDefault() ?? "quiz invitation";
+            }
+
+            Exam exam;
+
+            using (var exams = this.factory.GetExamContext())
+            {
+                exam = (from e in exams.Exams
+                        where e.ExamId == examId
+                        select e).Single();
+            }
+
+            
+
+            using (var client = new SmtpClient())
+            {
+                foreach (string recipient in recipientsList)
+                {
+                    string code = string.Empty;
+
+                    using (HMACMD5 hmac = new HMACMD5(Encoding.UTF8.GetBytes(ConfigurationManager.AppSettings["HmacSecret"])))
+                    {
+                        code = Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(string.Format("{0}:{1}", examId, recipient))));
+                    }
+
+                    string invitationLink = string.Format("{0}/account/acceptinvitation?examId={1}&email={2}&code={3}",
+                        this.Request.ApplicationPath, exam.ExamId, HttpUtility.UrlEncode(recipient), HttpUtility.UrlEncode(code));
+                    MailMessage mail = new MailMessage();
+                    mail.From = new MailAddress("no-reply@quizwiz.com", ConfigurationManager.AppSettings["InvitationDisplayName"]);
+                    mail.To.Add(new MailAddress(recipient));
+                    mail.Subject = string.Format(subject, exam.Name);
+                    mail.Body = string.Format(body, invitationLink);
+                    mail.IsBodyHtml = true;
+
+                    client.Send(mail);
+                }
+            }
+
+            return new EmptyResult();
         }
 
         /// <summary>

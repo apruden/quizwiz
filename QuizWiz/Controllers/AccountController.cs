@@ -4,7 +4,11 @@
     using Microsoft.AspNet.Identity.Owin;
     using Microsoft.Owin.Security;
     using QuizWiz.Models;
+    using System;
+    using System.Configuration;
     using System.Linq;
+    using System.Security.Cryptography;
+    using System.Text;
     using System.Threading.Tasks;
     using System.Web;
     using System.Web.Mvc;
@@ -190,6 +194,7 @@
             {
                 var user = new ApplicationUser { UserName = model.Email, Email = model.Email };
                 var result = await UserManager.CreateAsync(user, model.Password);
+
                 if (result.Succeeded)
                 {
                     var code = await UserManager.GenerateEmailConfirmationTokenAsync(user.Id);
@@ -203,6 +208,75 @@
 
             // If we got this far, something failed, redisplay form
             return View(model);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="email"></param>
+        /// <param name="code"></param>
+        /// <returns></returns>
+        [AllowAnonymous]
+        public ActionResult AcceptInvitation(int examId, string email, string code)
+        {
+            string expected;
+
+            using (HMACMD5 hmac = new HMACMD5(Encoding.UTF8.GetBytes(ConfigurationManager.AppSettings["HmacSecret"])))
+            {
+                expected = Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(string.Format("{0}:{1}", examId, email))));
+            }
+
+            if (expected != code)
+            {
+                return new HttpNotFoundResult("Invalid invitation");
+            }
+
+            return this.View();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="email"></param>
+        /// <param name="code"></param>
+        /// <param name="password"></param>
+        /// <returns></returns>
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<ActionResult> AcceptInvitation(int id, string email, string code, string password)
+        {
+            string expected;
+
+            using (HMACMD5 hmac = new HMACMD5(Encoding.UTF8.GetBytes(ConfigurationManager.AppSettings["HmacSecret"])))
+            {
+                expected = Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(string.Format("{0}:{1}", id, email))));
+            }
+
+            if (expected != code)
+            {
+                return new HttpNotFoundResult("Invalid invitation");
+            }
+
+            var existing = (from u in UserManager.Users
+                            where u.Email == email
+                            select u).SingleOrDefault();
+
+            if (existing != null)
+            {
+                return RedirectToAction("Take", "Exam", new { id = id });
+            }
+
+            var user = new ApplicationUser { UserName = email, Email = email };
+            var result = await UserManager.CreateAsync(user, password);
+
+            if (result.Succeeded)
+            {
+                return RedirectToAction("Take", "Exam", new { id = id });
+            }
+
+            return this.View();
         }
 
         //

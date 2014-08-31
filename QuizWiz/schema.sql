@@ -1,3 +1,7 @@
+create table Settings (
+    Name text primary key not null,
+    Value text null
+);
 create table Answer (
     AnswerId integer primary key autoincrement,
     Text text null,
