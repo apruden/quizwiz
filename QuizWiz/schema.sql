@@ -6,7 +6,6 @@ create table Answer (
     AnswerId integer primary key autoincrement,
     Text text null,
     Points integer not null,
-    IsOpenEnded boolean not null,
     Question_QuestionId integer null,
     foreign key (Question_QuestionId) references Question(QuestionId)
 );
@@ -23,6 +22,7 @@ create table Question (
     QuestionId integer primary key autoincrement,
     Text text null,
     OrderIndex integer not null,
+    IsOpenEnded boolean not null,
     Exam_ExamId integer null,
     foreign key (Exam_ExamId) references Exam(ExamId)
 );

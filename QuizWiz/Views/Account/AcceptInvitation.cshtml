@@ -9,19 +9,22 @@
 @using (Html.BeginForm("AcceptInvitation", "Account", FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
 {
   @Html.AntiForgeryToken()
+  @Html.HiddenFor(m => m.ExamId)
+  @Html.HiddenFor(m => m.Code)
+  @Html.HiddenFor(m => m.Email)
   <h4>Setup your password.</h4>
   <hr />
   @Html.ValidationSummary("", new { @class = "text-danger" })
   <div class="form-group">
     @Html.LabelFor(m => m.Password, new { @class = "col-md-2 control-label" })
     <div class="col-md-10">
-      @Html.TextBoxFor(m => m.Password, new { @class = "form-control" })
+      @Html.PasswordFor(m => m.Password, new { @class = "form-control" })
     </div>
   </div>
   <div class="form-group">
     @Html.LabelFor(m => m.ConfirmPassword, new { @class = "col-md-2 control-label" })
     <div class="col-md-10">
-      @Html.TextBoxFor(m => m.ConfirmPassword, new { @class = "form-control" })
+      @Html.PasswordFor(m => m.ConfirmPassword, new { @class = "form-control" })
     </div>
   </div>
   <div class="form-group">

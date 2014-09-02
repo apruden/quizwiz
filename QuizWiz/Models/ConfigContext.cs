@@ -16,6 +16,14 @@
         /// <summary>
         /// 
         /// </summary>
+        public ConfigContext()
+            : base("DefaultConnection")
+        {
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public virtual DbSet<Setting> Settings { get; set; }
     }
 

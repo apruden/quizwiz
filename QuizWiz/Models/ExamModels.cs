@@ -144,6 +144,11 @@
         /// <summary>
         /// 
         /// </summary>
+        public bool IsOpenEnded { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public IList<Answer> Answers { get; set; }
     }
 
@@ -169,11 +174,6 @@
         /// 
         /// </summary>
         public int Points { get; set; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public bool IsOpenEnded { get; set; }
     }
 
     /// <summary>
@@ -257,16 +257,16 @@
         /// 
         /// </summary>
         [NotMapped]
-        public DateTime Finished
+        public DateTime? Finished
         {
             get
             {
-                return DateTime.Parse(this.finished);
+                return this.finished != null ? DateTime.Parse(this.finished) : (DateTime?)null;
             }
 
             set
             {
-                this.finished = value.ToString("u");
+                this.finished = value.HasValue ? value.Value.ToString("u") : null;
             }
         }
 

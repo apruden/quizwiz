@@ -232,7 +232,7 @@
                 return new HttpNotFoundResult("Invalid invitation");
             }
 
-            return this.View();
+            return this.View(new  AcceptInvitationViewModel {Code = code, Email=email, ExamId=examId});
         }
 
         /// <summary>
@@ -245,13 +245,13 @@
         /// <returns></returns>
         [HttpPost]
         [AllowAnonymous]
-        public async Task<ActionResult> AcceptInvitation(int id, string email, string code, string password)
+        public async Task<ActionResult> AcceptInvitation(int examId, string email, string code, string password)
         {
             string expected;
 
             using (HMACMD5 hmac = new HMACMD5(Encoding.UTF8.GetBytes(ConfigurationManager.AppSettings["HmacSecret"])))
             {
-                expected = Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(string.Format("{0}:{1}", id, email))));
+                expected = Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(string.Format("{0}:{1}", examId, email))));
             }
 
             if (expected != code)
@@ -265,7 +265,7 @@
 
             if (existing != null)
             {
-                return RedirectToAction("Take", "Exam", new { id = id });
+                return RedirectToAction("Take", "Exam", new { id = examId });
             }
 
             var user = new ApplicationUser { UserName = email, Email = email };
@@ -273,10 +273,26 @@
 
             if (result.Succeeded)
             {
-                return RedirectToAction("Take", "Exam", new { id = id });
+                var result1 = await SignInManager.PasswordSignInAsync(email, password, false, shouldLockout: false);
+
+                switch (result1)
+                {
+                    case SignInStatus.Success:
+                        return RedirectToAction("Take", "Exam", new { id = examId });
+                    case SignInStatus.LockedOut:
+                        return View("Lockout");
+                    case SignInStatus.RequiresVerification:
+                        return RedirectToAction("SendCode", new { ReturnUrl = "/" });
+                    case SignInStatus.Failure:
+                    default:
+                        ModelState.AddModelError("", "Invalid login attempt.");
+                        return View(new AcceptInvitationViewModel { Code = code, Email = email, ExamId = examId });
+                }
             }
 
-            return this.View();
+            AddErrors(result);
+
+            return this.View(new AcceptInvitationViewModel { Code = code, Email = email, ExamId = examId });
         }
 
         //

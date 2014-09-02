@@ -6,7 +6,7 @@
 
 <h2>Edit Quiz</h2>
 
-@using (Html.BeginForm("Edit", "Exams", FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
+@using (Html.BeginForm("Edit", "Exams", FormMethod.Post, new { @class = "form-horizontal", role = "form" , id="EditForm"}))
 {
   @Html.AntiForgeryToken()
   @Html.ValidationSummary(true)
@@ -48,46 +48,60 @@
   </div>
   <div class="form-group">
     <div class="col-md-offset-2 col-md-10">
-      <input type="submit" value="Save" class="btn btn-default" />
+      <input type="submit" value="Save" class="btn btn-default btn-primary" />
     </div>
   </div>
 }
 
 @if (Model.ExamId != 0)
 {
-  <button type="button" data-bind="click: addQuestion" class="btn btn-default">Add question</button>
   <!-- ko template: { name: displayMode, foreach: questions } -->
+  <!-- /ko -->
+  <!-- ko ifnot: editing -->
+  <button type="button" data-bind="click: addQuestion" class="btn btn-default btn-primary">Add question</button>
   <!-- /ko -->
 }
 
 @section Scripts {
   <script id="displayQuestion" type="text/html">
     <div>
-      <button type="button" class="btn btn-default" data-bind="click: editQuestion">Edit</button>
-      <button type="button" class="btn btn-default" data-bind="click: deleteQuestion">Delete</button>
+      <h3>Question <span data-bind="text: $index() + 1"></span></h3>
       <div data-bind="html: text"></div>
       <ul data-bind="foreach: answers">
         <li data-bind="html: text"></li>
       </ul>
+      <button type="button" class="btn btn-default" data-bind="click: editQuestion">Edit</button>
+      <button type="button" class="btn btn-default" data-bind="click: deleteQuestion">Delete</button>
     </div>
   </script>
   <script id="editQuestion" type="text/html">
     <form class="form-horizontal" role="form">
       <fieldset>
-        <legend>Question</legend>
+        <legend>New Question</legend>
         <div class="form-group">
           <textarea data-bind="attr: { 'id': 'q_' + $index()}, richText: text" class="form-control"></textarea>
         </div>
+        <div class="form-group">
+          <label data-bind="attr: { 'for': 'q_' + $index()}">
+            open ended
+            <input type="checkbox" data-bind="attr: { 'id': 'q_' + $index()}, checked: isOpenEnded" class="form-control" />
+          </label>
+        </div>
+        <!-- ko ifnot: isOpenEnded -->
         <h3>Answers</h3>
         <div data-bind="foreach: answers">
           <div class="form-group">
             <label>Answer #<span data-bind="text: $index() + 1"></span></label>
-            <input type="text" data-bind="value: points" class="form-control"/>
+            <input type="number" data-bind="value: points" class="form-control" placeholder="points"/>
             <textarea data-bind="attr: { 'id': 'a_' + $index()}, richText: text" class="form-control"></textarea>
           </div>
         </div>
         <button type="button" data-bind="click: addAnswer" class="btn btn-default">Add answer</button>
-        <button data-bind="click: save" class="btn btn-primary">Save</button>
+        <!-- /ko -->
+        <div class="form-group">
+          <button data-bind="click: save.bind($data, $index())" class="btn btn-primary">Save question</button>
+          <button data-bind="click: $parent.cancelAdd" class="btn btn-default">Cancel</button>
+        </div>
       </fieldset>
     </form>
   </script>
@@ -110,7 +124,7 @@
         CKEDITOR.replace(element, options);
         CKEDITOR.instances[txtBoxID].focusManager.blur = function () {
           var observable = valueAccessor();
-          observable($(element).val());
+          observable(CKEDITOR.instances[txtBoxID].getData());
         };
       },
 
@@ -121,35 +135,44 @@
       }
     };
 
-    $.exam = JSON.parse('@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model))');
+    $.exam = JSON.parse('@Html.Raw(HttpUtility.JavaScriptStringEncode(Newtonsoft.Json.JsonConvert.SerializeObject(Model)))');
 
     function AnswerViewModel(a) {
       var self = this;
       this.text = ko.observable(a.Text);
-      this.points = ko.observable(a.Points);
+      this.points = ko.observable(a.Points || 0);
     };
 
     function QuestionViewModel(q) {
       var self = this;
       this.editing = ko.observable(q.Editing || false);
       this.text = ko.observable(q.Text);
+      this.isOpenEnded = ko.observable(q.IsOpenEnded);
       this.answers = ko.observableArray(ko.utils.arrayMap(q.Answers || [], function (a) {
         return new AnswerViewModel(a);
       }));
 
-      this.save = function () {
-        var answers = [];
+      this.save = function (oidx, q) {
+        var answers = [], valid = false;
 
         $.each(self.answers(), function (idx, a) {
-          answers.push({ Text: a.text() });
+          answers.push({ Points: a.points(), Text: a.text() });
+          if (a.points()) {
+            valid = true;
+          }
         });
+
+        if (!valid & !confirm('Answers have no points! Continue saving?')) {
+          return;
+        }
 
         $.ajax({
           url: '/Question/Edit',
           type: 'POST',
-          data: JSON.stringify({ ExamId: $.exam.ExamId, Text: self.text(), Answers: answers }),
+          data: JSON.stringify({ ExamId: $.exam.ExamId, Text: self.text(), Answers: answers, IsOpenEnded: self.isOpenEnded(), OrderIndex: oidx}),
           contentType: "application/json; charset=utf-8",
           success: function (data) {
+            self.editing(false);
             alert('Saved');
           },
           error: function (jqXhr, status, msg) {
@@ -160,7 +183,7 @@
 
       this.addAnswer = function () {
         self.answers.push(new AnswerViewModel({ Text: '' }));
-      }
+      };
 
       this.editQuestion = function () {
       };
@@ -172,18 +195,31 @@
     /*Exam view model*/
     function ExamViewModel() {
       var self = this;
-
-      this.displayMode = function (question) {
+      
+      self.displayMode = function (question) {
         return question.editing() ? "editQuestion" : "displayQuestion";
       };
 
-      this.questions = ko.observableArray(ko.utils.arrayMap($.exam.Questions || [], function (q) {
+      self.questions = ko.observableArray(ko.utils.arrayMap($.exam.Questions || [], function (q) {
         return new QuestionViewModel(q);
       }));
 
-      this.addQuestion = function () {
+      self.addQuestion = function () {
         self.questions.push(new QuestionViewModel({ Text: '', Answers: [], Editing: true }));
       };
+
+      self.cancelAdd = function (q) {
+        self.questions.remove(q);
+      };
+
+      self.editing = ko.computed(function () {
+        var res = false;
+        $.each(self.questions(), function (idx, q) {
+          if (q.editing()) res = true;
+        });
+
+        return res;
+      });
     };
 
     var viewModel = new ExamViewModel();

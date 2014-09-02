@@ -80,7 +80,7 @@
             mockContextFactory.Setup<ExamContext>(f => f.GetExamContext()).Returns(mockContext.Object);
 
             var controller = new ExamsController(mockContextFactory.Object);
-            controller.Delete(new Exam { ExamId = 1 });
+            controller.Delete(1);
         }
     }
 }

@@ -1,10 +1,7 @@
 ﻿namespace QuizWiz.Models
 {
-    using System;
     using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
-    using System.Linq;
-    using System.Web;
 
     /// <summary>
     /// 
@@ -21,6 +18,16 @@
         /// </summary>
         [Required]
         public string Text { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool IsOpenEnded { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public int OrderIndex { get; set; }
 
         /// <summary>
         /// 

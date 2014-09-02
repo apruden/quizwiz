@@ -49,11 +49,12 @@
                 {
                     foreach (var a in model.Answers)
                     {
-                        answers.Add(new Answer { Text = a.Text });
+                        answers.Add(new Answer { Text = a.Text, Points=a.Points });
                     }
                 }
 
-                exam.Questions.Add(new Question { Text = model.Text, OrderIndex = 1, Answers = answers });
+                exam.Questions.Add(new Question { Text = model.Text, OrderIndex = model.OrderIndex,
+                    Answers = answers, IsOpenEnded= model.IsOpenEnded});
                 db.SaveChanges();
             }
 

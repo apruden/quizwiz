@@ -80,7 +80,7 @@
                 db.SaveChanges();
             }
 
-            return new EmptyResult();
+            return this.RedirectToAction("Edit", new { id = exam.ExamId });
         }
 
         /// <summary>
@@ -89,12 +89,14 @@
         /// <param name="exam"></param>
         /// <returns></returns>
         [HttpPost]
-        public ActionResult Delete(Exam exam)
+        public ActionResult Delete(int id)
         {
-            exam.UserId = this.User.Identity.Name;
-
             using (var db = this.factory.GetExamContext())
             {
+                var exam = (from e in db.Exams
+                            where e.ExamId == id
+                            select e).Single();
+
                 db.Exams.Remove(exam);
                 db.SaveChanges();
             }
@@ -184,15 +186,15 @@
             string[] recipientsList = (from r in recipients.Split(',')
                                        select r.Trim()).ToArray();
 
-            using (var config = this.factory.GetExamContext())
+            using (var config = this.factory.GetConfigContext())
             {
                 body = (from s in config.Settings
                         where s.Name == "InvitationBody"
                         select s.Value).SingleOrDefault() ?? "{0}";
 
                 subject = (from s in config.Settings
-                        where s.Name == "InvitationSubject"
-                        select s.Value).SingleOrDefault() ?? "quiz invitation";
+                           where s.Name == "InvitationSubject"
+                           select s.Value).SingleOrDefault() ?? "quiz invitation";
             }
 
             Exam exam;
@@ -203,8 +205,6 @@
                         where e.ExamId == examId
                         select e).Single();
             }
-
-            
 
             using (var client = new SmtpClient())
             {
@@ -218,7 +218,7 @@
                     }
 
                     string invitationLink = string.Format("{0}/account/acceptinvitation?examId={1}&email={2}&code={3}",
-                        this.Request.ApplicationPath, exam.ExamId, HttpUtility.UrlEncode(recipient), HttpUtility.UrlEncode(code));
+                        Request.Url.Scheme + "://" + Request.Url.Authority, exam.ExamId, HttpUtility.UrlEncode(recipient), HttpUtility.UrlEncode(code));
                     MailMessage mail = new MailMessage();
                     mail.From = new MailAddress("no-reply@quizwiz.com", ConfigurationManager.AppSettings["InvitationDisplayName"]);
                     mail.To.Add(new MailAddress(recipient));
@@ -265,31 +265,36 @@
                     return new HttpStatusCodeResult(300);
                 }
 
+
+                Response response = null;
+
+                response = (from r in submission.Responses
+                            where r.Question.QuestionId == question.QuestionId
+                            select r).FirstOrDefault();
+
+                Answer answer = null;
+
                 if (AnswerId.HasValue)
                 {
-                    Response response = null;
+                    answer = db.Answers.Find(AnswerId);
+                }
 
-                    response = (from r in submission.Responses
-                                where r.Question.QuestionId == question.QuestionId
-                                select r).FirstOrDefault();
-
-                    if (response == null)
+                if (response == null)
+                {
+                    response = new Response
                     {
-                        response = new Response
-                        {
-                            Answer = db.Answers.Find(AnswerId),
-                            Question = question,
-                            Value = value
-                        };
+                        Answer = answer,
+                        Question = question,
+                        Value = value
+                    };
 
-                        db.Responses.Add(response);
-                        submission.Responses.Add(response);
-                    }
-                    else
-                    {
-                        response.Answer = db.Answers.Find(AnswerId);
-                        response.Value = value;
-                    }
+                    db.Responses.Add(response);
+                    submission.Responses.Add(response);
+                }
+                else
+                {
+                    response.Answer = answer;
+                    response.Value = value;
                 }
 
                 var exam = (from e in db.Exams.Include("Questions.Answers")
@@ -334,7 +339,7 @@
                                   where s.SubmissionId == submissionId
                                   select s).FirstOrDefault();
 
-                if (submission != null && submission.Elapsed > TimeSpan.FromMinutes(20))
+                if (submission != null && submission.Elapsed > TimeSpan.FromMinutes(submission.Exam.Duration))
                 {
                     return new HttpStatusCodeResult(300);
                 }
