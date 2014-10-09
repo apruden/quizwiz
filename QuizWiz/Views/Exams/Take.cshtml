@@ -13,7 +13,7 @@
 }
 else
 {
-  <input type="hidden" id="SubmissionId" name="SubmissionId" value="0" data-bind="value: submissionId" />
+  <input type="hidden" id="SubmissionId" name="SubmissionId" value="0" data-bind="value: submissionId"/>
 }
 
 <div>
@@ -24,7 +24,7 @@ else
 </div>
 
 <div>
-  <button data-bind="text: action, click: submitQuestion">Submit</button>
+  <button class="btn btn-primary" data-bind="text: action, click: submitQuestion">Submit</button>
 </div>
 
 <script type="text/html" id="question-template">
@@ -34,14 +34,14 @@ else
   <!-- /ko -->
   <!-- ko if: IsOpenEnded -->
   <p>
-    <textarea data-bind="value: $root.responseText"></textarea>
+    <textarea data-bind="value: $root.responseText" class="form-control"></textarea>
   </p>
   <!-- /ko -->
 </script>
 
 <script type="text/html" id="answer-template">
   <p>
-    <input data-bind="value: AnswerId, checked: $root.responseId" name="answerGroup" type="radio" value="" /><span data-bind="html: Text"></span>
+    <input data-bind="value: AnswerId, checked: $root.responseId" name="answerGroup" type="radio" value="" class="form-control"/><span data-bind="html: Text"></span>
   </p>
 </script>
 

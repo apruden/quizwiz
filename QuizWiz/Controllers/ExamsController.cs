@@ -76,7 +76,24 @@
 
             using (var db = this.factory.GetExamContext())
             {
-                db.Exams.Add(exam);
+                var found = (from e in db.Exams
+                            where exam.ExamId == exam.ExamId
+                            select e).SingleOrDefault();
+
+                if (found != null)
+                {
+                    found.AllowRetries = exam.AllowRetries;
+                    found.Description = exam.Description;
+                    found.Duration = exam.Duration;
+                    found.Name = exam.Name;
+                    found.Private = exam.Private;
+                    found.UserId = this.User.Identity.Name;
+                }
+                else
+                {
+                    db.Exams.Add(exam);
+                }
+
                 db.SaveChanges();
             }
 
@@ -306,7 +323,7 @@
                                 orderby q.OrderIndex
                                 select q).FirstOrDefault();
 
-                if (question.OrderIndex == exam.Questions.Count)
+                if (question.OrderIndex == (exam.Questions.Count - 1))
                 {
                     submission.Finished = DateTime.UtcNow;
                 }
