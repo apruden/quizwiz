@@ -1,3 +1,4 @@
+CREATE TABLE Stats (Name text not null primary key, Value integer null);
 create table Settings (
     Name text primary key not null,
     Value text null

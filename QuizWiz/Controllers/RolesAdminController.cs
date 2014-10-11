@@ -14,7 +14,7 @@
     /// <summary>
     /// 
     /// </summary>
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "admin")]
     public class RolesAdminController : Controller
     {
         private ApplicationUserManager _userManager;

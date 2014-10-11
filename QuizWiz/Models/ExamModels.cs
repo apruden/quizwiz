@@ -283,7 +283,7 @@
 
             set
             {
-                this.elapsed = value.Seconds;
+                this.elapsed = (int)value.TotalSeconds;
             }
         }
 

@@ -18,6 +18,9 @@ namespace QuizWiz.Models
         }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         public ApplicationDbContext()

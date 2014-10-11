@@ -71,7 +71,7 @@
         <li data-bind="html: text"></li>
       </ul>
       <button type="button" class="btn btn-default" data-bind="click: editQuestion">Edit</button>
-      <button type="button" class="btn btn-default" data-bind="click: deleteQuestion">Delete</button>
+      <button type="button" class="btn btn-default" data-bind="click: $parent.deleteQuestion">Delete</button>
     </div>
   </script>
   <script id="editQuestion" type="text/html">
@@ -145,6 +145,7 @@
 
     function QuestionViewModel(q) {
       var self = this;
+      this.questionId = q.QuestionId;
       this.editing = ko.observable(q.Editing || false);
       this.text = ko.observable(q.Text);
       this.isOpenEnded = ko.observable(q.IsOpenEnded);
@@ -167,12 +168,14 @@
         }
 
         $.ajax({
-          url: '/Question/Edit',
+          url: '/question/edit',
           type: 'POST',
           data: JSON.stringify({ ExamId: $.exam.ExamId, Text: self.text(), Answers: answers, IsOpenEnded: self.isOpenEnded(), OrderIndex: oidx}),
           contentType: "application/json; charset=utf-8",
+          dataType : 'json',
           success: function (data) {
             self.editing(false);
+            self.questionId = data.questionId;
             alert('Saved');
           },
           error: function (jqXhr, status, msg) {
@@ -186,9 +189,7 @@
       };
 
       this.editQuestion = function () {
-      };
-
-      this.deleteQuestion = function () {
+        self.editing(true);
       };
     }
 
@@ -210,6 +211,20 @@
 
       self.cancelAdd = function (q) {
         self.questions.remove(q);
+      };
+
+      self.deleteQuestion = function (q) {
+        $.ajax({
+          url: '/question/delete',
+          type: 'POST',
+          data: { questionId: q.questionId },
+          success: function (data) {
+            self.questions.remove(q);
+          },
+          error: function (jqXhr, status, msg) {
+            alert('Error');
+          }
+        });
       };
 
       self.editing = ko.computed(function () {

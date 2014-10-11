@@ -3,6 +3,7 @@
     using System;
     using System.Configuration;
     using System.Data.SQLite;
+    using System.IO;
     using System.Threading;
     using System.Web.Mvc;
     using System.Web.Optimization;
@@ -56,6 +57,7 @@
         /// </summary>
         protected void Application_Start()
         {
+            this.SetupDatabase();
             AreaRegistration.RegisterAllAreas();
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
@@ -69,12 +71,56 @@
                 {
                     cmd.CommandText = "SELECT Value FROM Stats WHERE Name = 'BytesSent'";
                     var res = cmd.ExecuteScalar();
-                    Global.bytesSent = (long)res;
+                    Global.bytesSent = res != null ? (long)res : 0L;
+                }
+
+                if (Global.bytesSent == 0) {
+                    using(var cmd = conn.CreateCommand()){
+                        cmd.CommandText = "INSERT INTO Stats (Name, Value) VALUES ('BytesSent', 0)";
+                        cmd.ExecuteNonQuery();
+                    }
                 }
             }
 
             this.timer = new Timer(OnTimerElapsed);
             this.timer.Change(TimeSpan.Zero, TimeSpan.FromMinutes(1));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        protected void SetupDatabase()
+        {
+            var path = this.Server.MapPath("~/App_Data/quizwiz.db");
+
+            if (!File.Exists(path))
+            {
+                SQLiteConnection.CreateFile(path);
+                this.ExecuteScript(this.Server.MapPath("~/App_Data/identity.sql"));
+                this.ExecuteScript(this.Server.MapPath("~/App_Data/schema.sql"));
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="script"></param>
+        protected void ExecuteScript(string script)
+        {
+            using (var conn = new SQLiteConnection(ConfigurationManager.ConnectionStrings["DefaultConnection"].ConnectionString))
+            {
+                conn.Open();
+                var lines = File.ReadAllText(script).Split(';');
+
+                foreach (var line in lines)
+                {
+                    using (var cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = line;
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
         }
     }
 

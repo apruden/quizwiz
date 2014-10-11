@@ -4,7 +4,9 @@
 
 <div class="row voffset">
   <div class="col-xs-12">
+    @if (this.User.IsInRole("editor")) { 
     <p>@Html.ActionLink("Create Exam >>", "Edit", "Exams", null, new { @class = "btn btn-primary btn-large" })</p>
+    }
   </div>
 </div>
 <div class="row">

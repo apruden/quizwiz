@@ -21,7 +21,10 @@
       </div>
       <div class="navbar-collapse collapse">
         <ul class="nav navbar-nav">
-          <li>@Html.ActionLink("My Exams", "ShowMe", "Exams")</li>
+          @if (Request.IsAuthenticated && User.IsInRole("editor"))
+          {
+            <li>@Html.ActionLink("My Exams", "ShowMe", "Exams")</li>
+          }
           @if (Request.IsAuthenticated && User.IsInRole("Admin"))
           {
             <li>@Html.ActionLink("RolesAdmin", "Index", "RolesAdmin")</li>

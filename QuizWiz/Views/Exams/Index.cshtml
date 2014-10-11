@@ -4,7 +4,9 @@
 
 <div class="row voffset">
   <div class="col-xs-12">
-    <p>@Html.ActionLink("Create Exam >>", "Edit", "Exams", null, new { @class = "btn btn-primary btn-large" })</p>
+    @if (this.User.IsInRole("editor")) { 
+      <p>@Html.ActionLink("Create Exam >>", "Edit", "Exams", null, new { @class = "btn btn-primary btn-large" })</p>
+    }
   </div>
 </div>
 <div class="row">
@@ -40,9 +42,11 @@
             <input id="recipients" type="text" placeholder="comma, separated, recipients" class="form-control"/>
           </div>
         </form>
+        <p><a id="invitationLink" href="#"></a></p>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button id="getInvitationLink" type="button" class="btn btn-default">Show Link</button>
         <button id="submitInvite" type="button" class="btn btn-primary">Send</button>
       </div>
     </div>
@@ -79,11 +83,15 @@
           $('#myModal').modal('toggle');
         };
 
+        self.getInvitationLink = function (recipients) {
+          $.post('/exams/invite', { examId: self.current.ExamId, recipients: recipients, showOnly: true}, function (data) {
+            $('#invitationLink').html(data.link).attr('href', data.link);
+          }, 'json');
+        };
+
         self.sendInvitations = function (recipients) {
           $('#myModal').modal('toggle');
-          $.post('/exams/invite', { examId: self.current.ExamId, recipients: recipients}, null, function () {
-            alert('error');
-          });
+          $.post('/exams/invite', { examId: self.current.ExamId, recipients: recipients});
           self.current = null;
         };
       }
@@ -98,6 +106,11 @@
     $('#submitInvite').click(function () {
       var context = ko.contextFor(this);
       context.$root.sendInvitations($('#recipients').val());
+    });
+
+    $('#getInvitationLink').click(function () {
+      var context = ko.contextFor(this);
+      context.$root.getInvitationLink($('#recipients').val());
     });
   </script>
 }

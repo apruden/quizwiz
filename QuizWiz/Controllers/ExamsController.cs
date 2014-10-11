@@ -42,6 +42,7 @@
         /// 
         /// </summary>
         /// <returns></returns>
+        [Authorize(Roles="editor")]
         public ActionResult Edit(long? id)
         {
             Exam exam = null;
@@ -70,6 +71,7 @@
         /// <param name="exam"></param>
         /// <returns></returns>
         [HttpPost]
+        [Authorize(Roles="editor")]
         public ActionResult Edit(Exam exam)
         {
             exam.UserId = this.User.Identity.Name;
@@ -77,7 +79,7 @@
             using (var db = this.factory.GetExamContext())
             {
                 var found = (from e in db.Exams
-                            where exam.ExamId == exam.ExamId
+                            where e.ExamId == exam.ExamId
                             select e).SingleOrDefault();
 
                 if (found != null)
@@ -106,6 +108,7 @@
         /// <param name="exam"></param>
         /// <returns></returns>
         [HttpPost]
+        [Authorize(Roles = "editor")]
         public ActionResult Delete(int id)
         {
             using (var db = this.factory.GetExamContext())
@@ -155,7 +158,7 @@
                         return this.RedirectToAction("Finished", "Exams");
                     }
 
-                    submission.Elapsed += TimeSpan.FromSeconds(90);
+                    submission.Elapsed += TimeSpan.FromSeconds(60);
                     var response = submission.Responses.LastOrDefault();
 
                     if (response != null)
@@ -197,7 +200,8 @@
         /// </summary>
         /// <param name="recipients"></param>
         /// <returns></returns>
-        public ActionResult Invite(string recipients, int examId)
+        [Authorize(Roles = "editor")]
+        public ActionResult Invite(string recipients, int examId, bool showOnly=false)
         {
             string body, subject;
             string[] recipientsList = (from r in recipients.Split(',')
@@ -223,31 +227,55 @@
                         select e).Single();
             }
 
+            if (showOnly)
+            {
+                string recipient = recipientsList.FirstOrDefault();
+
+                if (recipient == null)
+                {
+                    return Json(new {});
+                }
+
+                return Json(new { link = this.GetInvitationLink(exam,  recipient) });
+            }
+
             using (var client = new SmtpClient())
             {
                 foreach (string recipient in recipientsList)
                 {
-                    string code = string.Empty;
-
-                    using (HMACMD5 hmac = new HMACMD5(Encoding.UTF8.GetBytes(ConfigurationManager.AppSettings["HmacSecret"])))
-                    {
-                        code = Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(string.Format("{0}:{1}", examId, recipient))));
-                    }
-
-                    string invitationLink = string.Format("{0}/account/acceptinvitation?examId={1}&email={2}&code={3}",
-                        Request.Url.Scheme + "://" + Request.Url.Authority, exam.ExamId, HttpUtility.UrlEncode(recipient), HttpUtility.UrlEncode(code));
                     MailMessage mail = new MailMessage();
                     mail.From = new MailAddress("no-reply@quizwiz.com", ConfigurationManager.AppSettings["InvitationDisplayName"]);
                     mail.To.Add(new MailAddress(recipient));
                     mail.Subject = string.Format(subject, exam.Name);
-                    mail.Body = string.Format(body, invitationLink);
+                    mail.Body = string.Format(body, this.GetInvitationLink(exam, recipient));
                     mail.IsBodyHtml = true;
 
                     client.Send(mail);
                 }
             }
 
-            return new EmptyResult();
+            return Json(new {});
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="exam"></param>
+        /// <param name="recipient"></param>
+        /// <returns></returns>
+        private string GetInvitationLink(Exam exam, string recipient)
+        {
+            string code = string.Empty;
+
+            using (HMACMD5 hmac = new HMACMD5(Encoding.UTF8.GetBytes(ConfigurationManager.AppSettings["HmacSecret"])))
+            {
+                code = Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(string.Format("{0}:{1}", exam.ExamId, recipient))));
+            }
+
+            string invitationLink = string.Format("{0}/account/acceptinvitation?examId={1}&email={2}&code={3}",
+                Request.Url.Scheme + "://" + Request.Url.Authority, exam.ExamId, HttpUtility.UrlEncode(recipient), HttpUtility.UrlEncode(code));
+
+            return invitationLink;
         }
 
         /// <summary>
@@ -263,6 +291,7 @@
         /// 
         /// </summary>
         /// <returns></returns>
+        [ValidateInput(false)]
         public ActionResult SubmitResponse(int QuestionId, int? AnswerId, int SubmissionId, string value)
         {
             Question nextQuestion = null;
@@ -281,7 +310,6 @@
 
                     return new HttpStatusCodeResult(300);
                 }
-
 
                 Response response = null;
 
@@ -315,7 +343,7 @@
                 }
 
                 var exam = (from e in db.Exams.Include("Questions.Answers")
-                            where e.Name == submission.Exam.Name
+                            where e.ExamId == submission.Exam.ExamId
                             select e).FirstOrDefault();
 
                 nextQuestion = (from q in exam.Questions
@@ -362,7 +390,7 @@
                 }
 
                 var exam = (from e in db.Exams.Include("Questions.Answers")
-                            where e.Name == submission.Exam.Name
+                            where e.ExamId == submission.Exam.ExamId
                             select e).SingleOrDefault();
 
                 model.Question = (from q in exam.Questions
@@ -389,6 +417,7 @@
                 {
                     TimeSpan delta = TimeSpan.FromSeconds(5);
                     submission.Elapsed += delta;
+                    submission.Heartbeat = DateTime.UtcNow;
 
                     db.SaveChanges();
                 }
@@ -437,7 +466,7 @@
             using (var db = this.factory.GetExamContext())
             {
                 exams = (from e in db.Exams
-                         where e.Name.Contains(q)
+                         where e.Name.ToLower().Contains(q.ToLower())
                          select e).Take(20).ToList();
             }
 

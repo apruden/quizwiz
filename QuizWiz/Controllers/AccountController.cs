@@ -21,7 +21,7 @@
     {
         private ApplicationUserManager userManager;
         private ApplicationSignInManager signInManager;
-
+        
         /// <summary>
         /// 
         /// </summary>
@@ -34,7 +34,7 @@
         /// </summary>
         /// <param name="userManager"></param>
         /// <param name="signInManager"></param>
-        public AccountController(ApplicationUserManager userManager, ApplicationSignInManager signInManager )
+        public AccountController(ApplicationUserManager userManager, ApplicationSignInManager signInManager)
         {
             UserManager = userManager;
             SignInManager = signInManager;
@@ -203,6 +203,7 @@
                     ViewBag.Link = callbackUrl;
                     return View("DisplayEmail");
                 }
+
                 AddErrors(result);
             }
 
@@ -232,7 +233,13 @@
                 return new HttpNotFoundResult("Invalid invitation");
             }
 
-            return this.View(new  AcceptInvitationViewModel {Code = code, Email=email, ExamId=examId});
+            var user = this.UserManager.FindByEmail<ApplicationUser, string>(email);
+
+            if (user == null) { 
+                return this.View(new AcceptInvitationViewModel {Code = code, Email=email, ExamId=examId});
+            }
+
+            return RedirectToAction("Take", "Exams", new { id = examId });
         }
 
         /// <summary>
@@ -265,7 +272,7 @@
 
             if (existing != null)
             {
-                return RedirectToAction("Take", "Exam", new { id = examId });
+                return RedirectToAction("Take", "Exams", new { id = examId });
             }
 
             var user = new ApplicationUser { UserName = email, Email = email };
@@ -278,7 +285,7 @@
                 switch (result1)
                 {
                     case SignInStatus.Success:
-                        return RedirectToAction("Take", "Exam", new { id = examId });
+                        return RedirectToAction("Take", "Exams", new { id = examId });
                     case SignInStatus.LockedOut:
                         return View("Lockout");
                     case SignInStatus.RequiresVerification:

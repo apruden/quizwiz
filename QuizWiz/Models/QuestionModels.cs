@@ -8,6 +8,8 @@
     /// </summary>
     public class QuestionEditModel
     {
+        public int QuestionId { get; set; }
+
         /// <summary>
         /// 
         /// </summary>

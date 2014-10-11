@@ -4,7 +4,7 @@
   ViewBag.Title = "Take";
 }
 
-<h2>Take</h2>
+<h2>Taking @Model.Exam.Name</h2>
 
 @if (Model.Submission != null)
 {
@@ -34,7 +34,7 @@ else
   <!-- /ko -->
   <!-- ko if: IsOpenEnded -->
   <p>
-    <textarea data-bind="value: $root.responseText" class="form-control"></textarea>
+    <textarea data-bind="value: $root.responseText" class="form-control" rows="10"></textarea>
   </p>
   <!-- /ko -->
 </script>
@@ -61,7 +61,7 @@ else
       this.questionsCount = ko.observable(parseInt($('#QuestionsCount').val(), 10));
       this.submitQuestion = function () {
         $.ajax({
-          url: '/Exams/SubmitResponse',
+          url: '/exams/submitresponse',
           type: 'POST',
           dataType: 'json',
           data: { SubmissionId: self.submissionId, QuestionId: self.question().QuestionId, AnswerId: self.responseId, Value: self.responseText() },
@@ -70,7 +70,7 @@ else
               location.hash = data.OrderIndex;
             }
             else {
-              location = '/Exams/Finished';
+              location = '/exams/finished';
             }
           },
           error: function (jqXhr, status, msg) {
@@ -81,7 +81,7 @@ else
 
       this.getQuestion = function (orderIndex, submissionId) {
         $.ajax({
-          url: '/Exams/GetQuestion',
+          url: '/exams/getquestion',
           type: 'GET',
           data: { OrderIndex: orderIndex, SubmissionId: submissionId },
           dataType: 'json',
@@ -95,12 +95,12 @@ else
               }
             }
             else {
-              location = '/Exams/Finished';
+              location = '/exams/finished';
             }
           },
           error: function (jqXhr) {
             if (jqXhr.status == 300) {
-              location = '/Exams/Finished';
+              location = '/exams/finished';
             }
             else {
               alert("Unexpected error. Contact support.");
@@ -117,7 +117,7 @@ else
 
       this.heartbeat = function () {
         $.ajax({
-          url: '/Exams/Heartbeat',
+          url: '/exams/heartbeat',
           type: 'GET',
           data: { SubmissionId: self.submissionId },
           success: function () {

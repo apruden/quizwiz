@@ -163,11 +163,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="identity.sql" />
+    <Content Include="App_Data\identity.sql" />
     <Content Include="packages.config" />
-    <Content Include="schema.sql" />
+    <Content Include="App_Data\schema.sql" />
     <Content Include="Views\Exams\Edit.cshtml" />
-    <Content Include="App_Data\quizwiz.db" />
     <Content Include="Local.config" />
     <Content Include="MailSettings.config" />
     <None Include="Properties\PublishProfiles\quizwiz.pubxml" />
