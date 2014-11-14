@@ -304,7 +304,7 @@
 
                 var question = db.Questions.Find(QuestionId);
 
-                if (submission.Elapsed > TimeSpan.FromMinutes(20))
+                if (submission != null && submission.Elapsed > TimeSpan.FromMinutes(submission.Exam.Duration))
                 {
                     db.SaveChanges();
 
@@ -465,9 +465,17 @@
 
             using (var db = this.factory.GetExamContext())
             {
-                exams = (from e in db.Exams
-                         where e.Name.ToLower().Contains(q.ToLower())
-                         select e).Take(20).ToList();
+                if (!string.IsNullOrEmpty(q))
+                {
+                    exams = (from e in db.Exams
+                             where e.Name.ToLower().Contains(q.ToLower())
+                             select e).Take(20).ToList();
+                }
+                else
+                {
+                    exams = (from e in db.Exams
+                             select e).OrderByDescending(x => x.ExamId).Take(20).ToList();
+                }
             }
 
             return this.Json(exams, JsonRequestBehavior.AllowGet);

@@ -94,6 +94,9 @@
           $.post('/exams/invite', { examId: self.current.ExamId, recipients: recipients});
           self.current = null;
         };
+
+        $.getJSON('/exams/me', { offset: 0, limit: 20 }, self.exams);
+        self.offset += 20;
       }
 
       mod.ExamsViewModel = ExamsViewModel;

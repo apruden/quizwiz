@@ -74,7 +74,12 @@ else
             }
           },
           error: function (jqXhr, status, msg) {
-            alert("Unexpected error. Contact support.");
+            if (jqXhr.status == 300) {
+              location = '/exams/finished';
+            }
+            else {
+              alert("Unexpected error. Contact support.");
+            }
           }
         });
       };
