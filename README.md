@@ -12,10 +12,9 @@ Web application to create quizzes/surveys.
 
 #TODO
 
-  * public/private tests
-  * commented results
-  * send invitations
+  * commented results (long term)
   * external authentication (oauth)
+  * refactor to angularjs
 
 #Demo
 
