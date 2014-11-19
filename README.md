@@ -14,8 +14,8 @@ Web application to create quizzes/surveys.
 
   * public/private tests
   * commented results
-  * send invitations
   * external authentication (oauth)
+  * refactor to angularjs
 
 #Demo
 
