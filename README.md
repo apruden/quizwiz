@@ -12,7 +12,7 @@ Web application to create quizzes/surveys.
 
 #TODO
 
-  * commented results
+  * commented results (long term)
   * external authentication (oauth)
   * refactor to angularjs
 
