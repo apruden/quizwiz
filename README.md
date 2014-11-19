@@ -12,7 +12,6 @@ Web application to create quizzes/surveys.
 
 #TODO
 
-  * public/private tests
   * commented results
   * external authentication (oauth)
   * refactor to angularjs
