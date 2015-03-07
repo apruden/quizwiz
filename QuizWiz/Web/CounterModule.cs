@@ -108,8 +108,29 @@
         /// </summary>
         public override long Position
         {
-            get { return this.original.Position; }
-            set { this.original.Position = value; }
+            get
+            {
+                try
+                {
+                    return this.original.Position;
+                }
+                catch
+                {
+                    return 0;
+                }
+            }
+
+            set
+            {
+                try
+                {
+                    this.original.Position = value;
+                }
+                catch
+                {
+                    return;
+                }
+            }
         }
 
         /// <summary>

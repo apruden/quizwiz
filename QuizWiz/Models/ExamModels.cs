@@ -116,6 +116,15 @@
         /// 
         /// </summary>
         public string UserId { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public bool IsAvailable()
+        {
+            return this.Questions.Count == 0;
+        }
     }
 
     /// <summary>
@@ -291,6 +300,15 @@
         /// 
         /// </summary>
         public IList<Response> Responses { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public bool IsCompleted()
+        {
+            return this.Elapsed > TimeSpan.FromMinutes(this.Exam.Duration) || this.Finished != null;
+        }
     }
 
     /// <summary>

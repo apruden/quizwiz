@@ -5,4 +5,7 @@ packages/
 **/x86
 TestResults/
 *.user
+*.suo
+*.db
+*~
 .nuget

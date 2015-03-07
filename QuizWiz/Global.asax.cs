@@ -76,7 +76,7 @@
 
                 if (Global.bytesSent == 0) {
                     using(var cmd = conn.CreateCommand()){
-                        cmd.CommandText = "INSERT INTO Stats (Name, Value) VALUES ('BytesSent', 0)";
+                        cmd.CommandText = "INSERT OR REPLACE INTO Stats (Name, Value) VALUES ('BytesSent', 0)";
                         cmd.ExecuteNonQuery();
                     }
                 }

@@ -42,27 +42,17 @@
         /// 
         /// </summary>
         /// <returns></returns>
-        [Authorize(Roles="editor")]
+        [Authorize(Roles = "editor")]
         public ActionResult Edit(long? id)
         {
-            Exam exam = null;
-
-            if (id.HasValue)
+            using (var db = this.factory.GetExamContext())
             {
-                using (var db = this.factory.GetExamContext())
-                {
-                    exam = (from e in db.Exams.Include("Questions.Answers")
-                            where e.ExamId == id.Value
-                            select e).SingleOrDefault();
-                }
-            }
+                var exam = (from e in db.Exams.Include("Questions.Answers")
+                        where id.HasValue ? e.ExamId == id.Value : false
+                        select e).SingleOrDefault() ?? new Exam { Name = "", Questions = new List<Question>() };
 
-            if (exam == null)
-            {
-                exam = new Exam { Name = "", Questions = new List<Question>() };
+                return this.View(exam);
             }
-
-            return this.View(exam);
         }
 
         /// <summary>
@@ -71,35 +61,23 @@
         /// <param name="exam"></param>
         /// <returns></returns>
         [HttpPost]
-        [Authorize(Roles="editor")]
+        [Authorize(Roles = "editor")]
         public ActionResult Edit(Exam exam)
         {
-            exam.UserId = this.User.Identity.Name;
-
             using (var db = this.factory.GetExamContext())
             {
-                var found = (from e in db.Exams
-                            where e.ExamId == exam.ExamId
-                            select e).SingleOrDefault();
-
-                if (found != null)
-                {
-                    found.AllowRetries = exam.AllowRetries;
-                    found.Description = exam.Description;
-                    found.Duration = exam.Duration;
-                    found.Name = exam.Name;
-                    found.Private = exam.Private;
-                    found.UserId = this.User.Identity.Name;
-                }
-                else
-                {
-                    db.Exams.Add(exam);
-                }
+                var found = db.Exams.Find(exam.ExamId) ?? db.Exams.Add(exam);
+                found.UserId = this.User.Identity.Name;
+                found.AllowRetries = exam.AllowRetries;
+                found.Description = exam.Description;
+                found.Duration = exam.Duration;
+                found.Name = exam.Name;
+                found.Private = exam.Private;
 
                 db.SaveChanges();
-            }
 
-            return this.RedirectToAction("Edit", new { id = exam.ExamId });
+                return this.RedirectToAction("Edit", new { id = found.ExamId });
+            }
         }
 
         /// <summary>
@@ -113,10 +91,7 @@
         {
             using (var db = this.factory.GetExamContext())
             {
-                var exam = (from e in db.Exams
-                            where e.ExamId == id
-                            select e).Single();
-
+                var exam = db.Exams.Find(id);
                 db.Exams.Remove(exam);
                 db.SaveChanges();
             }
@@ -131,15 +106,13 @@
         /// <returns></returns>
         public ActionResult Take(long id, string slug)
         {
-            var model = new ExamSectionModel();
-
-            using (ExamContext db = this.factory.GetExamContext())
+            using (var db = this.factory.GetExamContext())
             {
                 var exam = (from e in db.Exams.Include("Questions.Answers")
                             where e.ExamId == id
                             select e).SingleOrDefault();
 
-                if (exam == null || exam.Questions.Count == 0)
+                if (exam == null || !exam.IsAvailable())
                 {
                     return HttpNotFound("Exam not available.");
                 }
@@ -147,52 +120,44 @@
                 var submission = (from s in db.Submissions.Include("Exam")
                                       .Include("Responses.Question")
                                   where s.Exam.ExamId == id && s.UserId == this.User.Identity.Name
-                                  select s).SingleOrDefault();
+                                  select s).SingleOrDefault() ?? db.Submissions.Add(
+                                  new Submission
+                                  {
+                                      Started = DateTime.UtcNow,
+                                      Elapsed = new TimeSpan(0, 0, 0),
+                                      Heartbeat = DateTime.UtcNow,
+                                      Exam = exam,
+                                      UserId = this.User.Identity.Name,
+                                      Responses = new List<Response>()
+                                  });
+                
+                if (submission.IsCompleted())
+                {
+                    return this.RedirectToAction("Finished", "Exams");
+                }
 
+                submission.Elapsed += TimeSpan.FromSeconds(60);
+                var response = submission.Responses.LastOrDefault();
                 var selectedQuestion = exam.Questions[0];
 
-                if (submission != null)
+                if (response != null)
                 {
-                    if (submission.Elapsed > TimeSpan.FromMinutes(exam.Duration) || submission.Finished != null)
-                    {
-                        return this.RedirectToAction("Finished", "Exams");
-                    }
-
-                    submission.Elapsed += TimeSpan.FromSeconds(60);
-                    var response = submission.Responses.LastOrDefault();
-
-                    if (response != null)
-                    {
-                        selectedQuestion = (from q in exam.Questions
-                                            where q.OrderIndex > response.Question.OrderIndex
-                                            orderby q.OrderIndex
-                                            select q).FirstOrDefault() ?? selectedQuestion;
-                    }
-                }
-                else
-                {
-                    submission = new Submission
-                        {
-                            Started = DateTime.UtcNow,
-                            Elapsed = new TimeSpan(0, 0, 0),
-                            Heartbeat = DateTime.UtcNow,
-                            Exam = exam,
-                            UserId = this.User.Identity.Name,
-                            Responses = new List<Response>()
-                        };
-
-                    db.Submissions.Add(submission);
+                    selectedQuestion = (from q in exam.Questions
+                                        where q.OrderIndex > response.Question.OrderIndex
+                                        orderby q.OrderIndex
+                                        select q).FirstOrDefault() ?? selectedQuestion;
                 }
 
                 db.SaveChanges();
 
-                model.Submission = submission;
-                model.Question = selectedQuestion;
-                model.Name = exam.Name;
-                model.Exam = exam;
+                return this.View(new ExamSectionModel
+                {
+                    Submission = submission,
+                    Question = selectedQuestion,
+                    Name = exam.Name,
+                    Exam = exam
+                });
             }
-
-            return this.View(model);
         }
 
         /// <summary>
@@ -201,7 +166,7 @@
         /// <param name="recipients"></param>
         /// <returns></returns>
         [Authorize(Roles = "editor")]
-        public ActionResult Invite(string recipients, int examId, bool showOnly=false)
+        public ActionResult Invite(string recipients, int examId, bool showOnly = false)
         {
             string body, subject;
             string[] recipientsList = (from r in recipients.Split(',')
@@ -222,28 +187,21 @@
 
             using (var exams = this.factory.GetExamContext())
             {
-                exam = (from e in exams.Exams
-                        where e.ExamId == examId
-                        select e).Single();
+                exam = exams.Exams.Find(examId);
             }
 
             if (showOnly)
             {
                 string recipient = recipientsList.FirstOrDefault();
 
-                if (recipient == null)
-                {
-                    return Json(new {});
-                }
-
-                return Json(new { link = this.GetInvitationLink(exam,  recipient) });
+                return recipient == null ? Json(new { }) : Json(new { link = this.GetInvitationLink(exam, recipient) });
             }
 
             using (var client = new SmtpClient())
             {
                 foreach (string recipient in recipientsList)
                 {
-                    MailMessage mail = new MailMessage();
+                    var mail = new MailMessage();
                     mail.From = new MailAddress("no-reply@quizwiz.com", ConfigurationManager.AppSettings["InvitationDisplayName"]);
                     mail.To.Add(new MailAddress(recipient));
                     mail.Subject = string.Format(subject, exam.Name);
@@ -254,7 +212,7 @@
                 }
             }
 
-            return Json(new {});
+            return Json(new { });
         }
 
         /// <summary>
@@ -295,11 +253,9 @@
         [HttpPost]
         public ActionResult Finished(int submissionId)
         {
-            using (ExamContext db = this.factory.GetExamContext())
+            using (var db = this.factory.GetExamContext())
             {
-                var submission = (from s in db.Submissions
-                                  where s.SubmissionId == submissionId
-                                  select s).FirstOrDefault();
+                var submission = db.Submissions.Find(submissionId);
                 submission.Finished = DateTime.UtcNow;
                 db.SaveChanges();
             }
@@ -322,8 +278,8 @@
                                   select s).FirstOrDefault();
 
                 emptyResponses = (from r in submission.Responses
-                                      where r.Answer == null && string.IsNullOrWhiteSpace(r.Value)
-                                      select r.Question).ToList();
+                                  where r.Answer == null && string.IsNullOrWhiteSpace(r.Value)
+                                  select r.Question).ToList();
 
 
                 var unanswered = (from q in submission.Exam.Questions
@@ -336,7 +292,7 @@
 
             ViewBag.MissingQuestions = emptyResponses;
             ViewBag.SubmissionId = submissionId;
-            
+
             return this.View();
         }
 
@@ -347,73 +303,44 @@
         [ValidateInput(false)]
         public ActionResult SubmitResponse(int QuestionId, int? AnswerId, int SubmissionId, string value)
         {
-            Question nextQuestion = null;
-
             using (ExamContext db = this.factory.GetExamContext())
             {
                 var submission = (from s in db.Submissions.Include("Responses.Question").Include("Exam")
                                   where s.SubmissionId == SubmissionId
                                   select s).FirstOrDefault();
 
-                var question = db.Questions.Find(QuestionId);
-
-                if (submission != null && submission.Elapsed > TimeSpan.FromMinutes(submission.Exam.Duration))
+                if (submission.IsCompleted())
                 {
-                    db.SaveChanges();
-
                     return new HttpStatusCodeResult(300);
                 }
 
-                Response response = null;
-
-                response = (from r in submission.Responses
-                            where r.Question.QuestionId == question.QuestionId
-                            select r).FirstOrDefault();
-
-                Answer answer = null;
-
-                if (AnswerId.HasValue)
-                {
-                    answer = db.Answers.Find(AnswerId);
-                }
-
-                if (response == null)
-                {
-                    response = new Response
-                    {
-                        Answer = answer,
-                        Question = question,
-                        Value = value
-                    };
-
-                    db.Responses.Add(response);
-                    submission.Responses.Add(response);
-                }
-                else
-                {
-                    response.Answer = answer;
-                    response.Value = value;
-                }
+                var question = db.Questions.Find(QuestionId);
+                var answer = AnswerId.HasValue ? db.Answers.Find(AnswerId) : null;
+                var response = (from r in submission.Responses
+                                where r.Question.QuestionId == question.QuestionId
+                                select r).FirstOrDefault() ?? db.Responses.Add(
+                                     new Response
+                                    {
+                                        Question = question,
+                                    });
+                response.Answer = answer;
+                response.Value = value;
+                submission.Responses.Add(response);
+                db.SaveChanges();
 
                 var exam = (from e in db.Exams.Include("Questions.Answers")
                             where e.ExamId == submission.Exam.ExamId
                             select e).FirstOrDefault();
 
-                nextQuestion = (from q in exam.Questions
-                                where q.OrderIndex > question.OrderIndex
-                                orderby q.OrderIndex
-                                select q).FirstOrDefault();
+                var nextQuestion = (from q in exam.Questions
+                                    where q.OrderIndex > question.OrderIndex
+                                    orderby q.OrderIndex
+                                    select q).FirstOrDefault();
 
-                db.SaveChanges();
-            }
+                return nextQuestion != null ?
+                    this.Json(new { HasNext = true, OrderIndex = nextQuestion.OrderIndex, Total = exam.Questions.Count }) :
+                    this.Json(new { HasNext = false });
 
-            if (nextQuestion != null)
-            {
-                return this.Json(new { HasNext = true, OrderIndex = nextQuestion.OrderIndex });
-            }
-            else
-            {
-                return this.Json(new { HasNext = false });
             }
         }
 
@@ -432,10 +359,8 @@
                                   where s.SubmissionId == submissionId
                                   select s).FirstOrDefault();
 
-                if (submission != null && submission.Elapsed > TimeSpan.FromMinutes(submission.Exam.Duration))
+                if (submission.IsCompleted())
                 {
-                    db.SaveChanges();
-
                     return new HttpStatusCodeResult(300);
                 }
 
@@ -447,9 +372,8 @@
                                 select q).OrderBy(x => x.OrderIndex).Skip(orderIndex).Take(1).SingleOrDefault();
 
                 model.Response = (from r in submission.Responses
-                            where r.Question.QuestionId == question.QuestionId
-                            select r).FirstOrDefault();
-                
+                                  where r.Question.QuestionId == question.QuestionId
+                                  select r).FirstOrDefault();
                 model.Question = question;
             }
 
@@ -462,20 +386,12 @@
         /// <returns></returns>
         public ActionResult Heartbeat(int submissionId)
         {
-            using (ExamContext db = this.factory.GetExamContext())
+            using (var db = this.factory.GetExamContext())
             {
-                var submission = (from s in db.Submissions
-                                  where s.SubmissionId == submissionId
-                                  select s).SingleOrDefault();
-
-                if (submission != null)
-                {
-                    TimeSpan delta = TimeSpan.FromSeconds(5);
-                    submission.Elapsed += delta;
-                    submission.Heartbeat = DateTime.UtcNow;
-
-                    db.SaveChanges();
-                }
+                var submission = db.Submissions.Find(submissionId);
+                submission.Elapsed += TimeSpan.FromSeconds(5);
+                submission.Heartbeat = DateTime.UtcNow;
+                db.SaveChanges();
             }
 
             return new EmptyResult();
@@ -496,16 +412,18 @@
         /// <returns></returns>
         public ActionResult Me(int offset, int limit)
         {
-            var exams = new List<Exam>();
-
             using (var db = this.factory.GetExamContext())
             {
-                exams = (from e in db.Exams
+                var exams = (from e in db.Exams
                          where e.UserId == this.User.Identity.Name
-                         select e).OrderBy(a => a.ExamId).Skip(offset).Take(limit).ToList();
-            }
+                         select e)
+                         .OrderBy(a => a.ExamId)
+                         .Skip(offset)
+                         .Take(limit)
+                         .ToList();
 
-            return this.Json(exams, JsonRequestBehavior.AllowGet);
+                return this.Json(exams, JsonRequestBehavior.AllowGet);
+            }
         }
 
         /// <summary>
@@ -516,24 +434,14 @@
         [AllowAnonymous]
         public ActionResult Search(string q)
         {
-            var exams = new List<Exam>();
-
             using (var db = this.factory.GetExamContext())
             {
-                if (!string.IsNullOrEmpty(q))
-                {
-                    exams = (from e in db.Exams
-                             where e.Name.ToLower().Contains(q.ToLower())
+                var exams = (from e in db.Exams
+                             where !string.IsNullOrEmpty(q) ? e.Name.ToLower().Contains(q.ToLower()) : true
                              select e).Take(20).ToList();
-                }
-                else
-                {
-                    exams = (from e in db.Exams
-                             select e).OrderByDescending(x => x.ExamId).Take(20).ToList();
-                }
-            }
 
-            return this.Json(exams, JsonRequestBehavior.AllowGet);
+                return this.Json(exams, JsonRequestBehavior.AllowGet);
+            }
         }
 
         /// <summary>
