@@ -74,6 +74,8 @@
     [Table("Exam")]
     public class Exam
     {
+        public const int HEARTBEAT_INTERVAL = 10;
+
         /// <summary>
         /// 
         /// </summary>
@@ -123,7 +125,7 @@
         /// <returns></returns>
         public bool IsAvailable()
         {
-            return this.Questions.Count == 0;
+            return this.Questions != null && this.Questions.Count != 0;
         }
     }
 

@@ -101,13 +101,13 @@
 
             switch (result)
             {
-                case SignInStatus.Success:
+                case QuizWiz.Models.SignInStatus.Success:
                     return RedirectToLocal(returnUrl);
-                case SignInStatus.LockedOut:
+                case QuizWiz.Models.SignInStatus.LockedOut:
                     return View("Lockout");
-                case SignInStatus.RequiresVerification:
+                case QuizWiz.Models.SignInStatus.RequiresVerification:
                     return RedirectToAction("SendCode", new { ReturnUrl = returnUrl });
-                case SignInStatus.Failure:
+                case QuizWiz.Models.SignInStatus.Failure:
                 default:
                     ModelState.AddModelError("", "Invalid login attempt.");
                     return View(model);
@@ -159,11 +159,11 @@
 
             switch (result)
             {
-                case SignInStatus.Success:
+                case QuizWiz.Models.SignInStatus.Success:
                     return RedirectToLocal(model.ReturnUrl);
-                case SignInStatus.LockedOut:
+                case QuizWiz.Models.SignInStatus.LockedOut:
                     return View("Lockout");
-                case SignInStatus.Failure:
+                case QuizWiz.Models.SignInStatus.Failure:
                 default:
                     ModelState.AddModelError("", "Invalid code.");
                     return View(model);
@@ -284,13 +284,13 @@
 
                 switch (result1)
                 {
-                    case SignInStatus.Success:
+                    case QuizWiz.Models.SignInStatus.Success:
                         return RedirectToAction("Take", "Exams", new { id = examId });
-                    case SignInStatus.LockedOut:
+                    case QuizWiz.Models.SignInStatus.LockedOut:
                         return View("Lockout");
-                    case SignInStatus.RequiresVerification:
+                    case QuizWiz.Models.SignInStatus.RequiresVerification:
                         return RedirectToAction("SendCode", new { ReturnUrl = "/" });
-                    case SignInStatus.Failure:
+                    case QuizWiz.Models.SignInStatus.Failure:
                     default:
                         ModelState.AddModelError("", "Invalid login attempt.");
                         return View(new AcceptInvitationViewModel { Code = code, Email = email, ExamId = examId });
@@ -462,13 +462,13 @@
 
             switch (result)
             {
-                case SignInStatus.Success:
+                case QuizWiz.Models.SignInStatus.Success:
                     return RedirectToLocal(returnUrl);
-                case SignInStatus.LockedOut:
+                case QuizWiz.Models.SignInStatus.LockedOut:
                     return View("Lockout");
-                case SignInStatus.RequiresVerification:
+                case QuizWiz.Models.SignInStatus.RequiresVerification:
                     return RedirectToAction("SendCode", new { ReturnUrl = returnUrl });
-                case SignInStatus.Failure:
+                case QuizWiz.Models.SignInStatus.Failure:
                 default:
                     // If the user does not have an account, then prompt the user to create an account
                     ViewBag.ReturnUrl = returnUrl;

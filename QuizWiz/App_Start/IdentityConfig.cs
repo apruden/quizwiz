@@ -73,7 +73,7 @@
         /// <param name="userId">user id</param>
         /// <param name="roles">list of role names</param>
         /// <returns></returns>
-        public virtual async Task<IdentityResult> AddToRolesAsync(string userId, string[] roles)
+        public override async Task<IdentityResult> AddToRolesAsync(string userId, string[] roles)
         {
             var userRoleStore = (IUserRoleStore<ApplicationUser, string>)Store;
 
@@ -101,7 +101,7 @@
         /// <param name="userId">user id</param>
         /// <param name="roles">list of role names</param>
         /// <returns></returns>
-        public virtual async Task<IdentityResult> RemoveFromRolesAsync(string userId, string[] roles)
+        public override async Task<IdentityResult> RemoveFromRolesAsync(string userId, string[] roles)
         {
             var userRoleStore = (IUserRoleStore<ApplicationUser, string>)Store;
 

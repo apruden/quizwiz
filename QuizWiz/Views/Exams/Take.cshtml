@@ -4,20 +4,20 @@
   ViewBag.Title = "Take";
 }
 
-<h2>Taking @Model.Exam.Name</h2>
+<h1>Taking @Model.Exam.Name</h1>
 
-@if (Model.Submission != null)
-{
-  <input type="hidden" id="SubmissionId" name="SubmissionId" value="@Model.Submission.SubmissionId" data-bind="value: submissionId" />
-  <input type="hidden" id="QuestionsCount" name="QuestionsCount" value="@Model.Exam.Questions.Count" data-bind="value: questionsCount" />
-}
-else
-{
-  <input type="hidden" id="SubmissionId" name="SubmissionId" value="0" data-bind="value: submissionId"/>
-}
+<input type="hidden" id="SubmissionId" name="SubmissionId" value="@Model.Submission.SubmissionId"/>
+<input type="hidden" id="QuestionsCount" name="QuestionsCount" value="@Model.Exam.Questions.Count"/>
+<input type="hidden" id="RemainingSeconds" name="RemainingSeconds" value="@((Model.Exam.Duration * 60) - Model.Submission.Elapsed.TotalSeconds)"/>
 
 <div>
-  <span data-bind="text: clock"></span>
+  Remaining: <strong><span data-bind="text: remaining"></span> minutes</strong> Current time: <span data-bind="text: clock"></span>
+</div>
+
+<div>
+    <h2>
+        Question <span data-bind="text: orderIndex"></span>/<span data-bind="text: questionsCount"></span>
+    </h2>
 </div>
 
 <div data-bind="template: { name: 'question-template', data: question }">
@@ -25,8 +25,8 @@ else
 
 <div>
   <button class="btn btn-primary" data-bind="click: prevQuestion, visible: hasPrev">previous</button>
-  <button class="btn btn-primary" data-bind="click: submitQuestion, visible: hasNext">next</button>
-  <button class="btn btn-primary" data-bind="click: finish">go to end</button>
+  <button class="btn btn-primary" data-bind="click: submitQuestion">next</button>
+  <button class="btn btn-primary" data-bind="click: finish, visible: hasNext">go to end</button>
 </div>
 
 <script type="text/html" id="question-template">
@@ -36,7 +36,7 @@ else
   <!-- /ko -->
   <!-- ko if: IsOpenEnded -->
   <p>
-    <textarea data-bind="value: $root.responseText" class="form-control" rows="10"></textarea>
+      <textarea data-bind="value: $root.responseText, hasfocus: !$root.responseText()" class="form-control" rows="10"></textarea>
   </p>
   <!-- /ko -->
 </script>
@@ -60,9 +60,19 @@ else
       self.responseText = ko.observable();
       self.hasNext = ko.observable(true);
       self.hasPrev = ko.observable(false);
+      self.total = ko.observable(0);
       self.question = ko.observable($.enableExam.question);
       self.submissionId = ko.observable($('#SubmissionId').val());
       self.questionsCount = ko.observable(parseInt($('#QuestionsCount').val(), 10));
+      self.remainingSeconds = ko.observable(parseInt($('#RemainingSeconds').val(), 10));
+
+      self.remaining = ko.computed(function () {
+          return Math.ceil(self.remainingSeconds()/60);
+      });
+
+      self.orderIndex = ko.computed(function () {
+          return self.question().OrderIndex + 1;
+      });
 
       function submit(prev) {
         $.ajax({
@@ -121,6 +131,7 @@ else
               self.question(data.Question);
               self.responseText(data.Response ? data.Response.Value : "");
               self.hasPrev(self.question().OrderIndex > 0);
+              self.hasNext(self.question().OrderIndex + 1 < self.questionsCount());  
             }
             else {
               location = '/exams/status?submissionId=' + self.submissionId();
@@ -140,7 +151,8 @@ else
       self.clock = ko.observable(new Date());
 
       self.tick = function () {
-        self.clock(new Date());
+          self.clock(new Date());
+          self.remainingSeconds(self.remainingSeconds() - 1);
       };
 
       self.heartbeat = function () {
@@ -157,7 +169,7 @@ else
 
       setInterval(self.tick, 1000);
 
-      setInterval(self.heartbeat, 5000);
+      setInterval(self.heartbeat, @(QuizWiz.Models.Exam.HEARTBEAT_INTERVAL * 1000));
 
       Sammy(function () {
         this.get('#:orderIndex', function () {

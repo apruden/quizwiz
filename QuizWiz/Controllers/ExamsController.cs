@@ -10,6 +10,7 @@
     using System.Net.Mail;
     using System.Security.Cryptography;
     using System.Text;
+    using System.Threading.Tasks;
     using System.Web;
     using System.Web.Mvc;
 
@@ -48,8 +49,8 @@
             using (var db = this.factory.GetExamContext())
             {
                 var exam = (from e in db.Exams.Include("Questions.Answers")
-                        where id.HasValue ? e.ExamId == id.Value : false
-                        select e).SingleOrDefault() ?? new Exam { Name = "", Questions = new List<Question>() };
+                            where id.HasValue ? e.ExamId == id.Value : false
+                            select e).SingleOrDefault() ?? new Exam { Name = "", Questions = new List<Question>() };
 
                 return this.View(exam);
             }
@@ -120,23 +121,29 @@
                 var submission = (from s in db.Submissions.Include("Exam")
                                       .Include("Responses.Question")
                                   where s.Exam.ExamId == id && s.UserId == this.User.Identity.Name
-                                  select s).SingleOrDefault() ?? db.Submissions.Add(
-                                  new Submission
-                                  {
-                                      Started = DateTime.UtcNow,
-                                      Elapsed = new TimeSpan(0, 0, 0),
-                                      Heartbeat = DateTime.UtcNow,
-                                      Exam = exam,
-                                      UserId = this.User.Identity.Name,
-                                      Responses = new List<Response>()
-                                  });
-                
-                if (submission.IsCompleted())
+                                  select s).ToList().OrderBy(s => s.Started).LastOrDefault();
+
+                if (submission != null && submission.IsCompleted() && !exam.AllowRetries)
                 {
                     return this.RedirectToAction("Finished", "Exams");
                 }
 
-                submission.Elapsed += TimeSpan.FromSeconds(60);
+                if (submission == null || submission.IsCompleted())
+                {
+                    submission = db.Submissions.Add(
+                                       new Submission
+                                       {
+                                           Started = DateTime.UtcNow,
+                                           Elapsed = new TimeSpan(0, 0, -60),
+                                           Heartbeat = DateTime.UtcNow,
+                                           Exam = exam,
+                                           UserId = this.User.Identity.Name,
+                                           Responses = new List<Response>()
+                                       });
+                }
+
+                submission.Elapsed += TimeSpan.FromSeconds(59);
+
                 var response = submission.Responses.LastOrDefault();
                 var selectedQuestion = exam.Questions[0];
 
@@ -260,7 +267,40 @@
                 db.SaveChanges();
             }
 
+            Task.Run(() => SendNotification(submissionId)).ConfigureAwait(false);
+
             return RedirectToAction("Finished");
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void SendNotification(int submissionId)
+        {
+            try
+            {
+                using (var db = this.factory.GetExamContext())
+                {
+                    var submission = (from s in db.Submissions.Include("Exam")
+                                      where s.SubmissionId == submissionId
+                                      select s).Single();
+
+                    using (var client = new SmtpClient())
+                    {
+                        var mail = new MailMessage();
+                        mail.From = new MailAddress("no-reply@quizwiz.com", ConfigurationManager.AppSettings["InvitationDisplayName"]);
+                        mail.To.Add(new MailAddress(submission.Exam.UserId));
+                        mail.Subject = "New exam submission.";
+                        mail.Body = "New exam submission";
+                        mail.IsBodyHtml = false;
+                        client.Send(mail);
+                    }
+                }
+            }
+            catch
+            {
+                //ignore
+            }
         }
 
         /// <summary>
@@ -269,15 +309,13 @@
         /// <returns></returns>
         public ActionResult Status(int submissionId)
         {
-            var emptyResponses = new List<Question>();
-
             using (ExamContext db = this.factory.GetExamContext())
             {
-                var submission = (from s in db.Submissions.Include("Responses.Question").Include("Exam")
+                var submission = (from s in db.Submissions.Include("Responses.Question").Include("Exam.Questions")
                                   where s.SubmissionId == submissionId
-                                  select s).FirstOrDefault();
+                                  select s).Single();
 
-                emptyResponses = (from r in submission.Responses
+                var emptyResponses = (from r in submission.Responses
                                   where r.Answer == null && string.IsNullOrWhiteSpace(r.Value)
                                   select r.Question).ToList();
 
@@ -288,10 +326,9 @@
                 emptyResponses.AddRange(unanswered.AsEnumerable());
 
                 ViewBag.ExamId = submission.Exam.ExamId;
+                ViewBag.MissingQuestions = emptyResponses;
+                ViewBag.SubmissionId = submissionId;
             }
-
-            ViewBag.MissingQuestions = emptyResponses;
-            ViewBag.SubmissionId = submissionId;
 
             return this.View();
         }
@@ -307,7 +344,7 @@
             {
                 var submission = (from s in db.Submissions.Include("Responses.Question").Include("Exam")
                                   where s.SubmissionId == SubmissionId
-                                  select s).FirstOrDefault();
+                                  select s).Single();
 
                 if (submission.IsCompleted())
                 {
@@ -357,7 +394,7 @@
             {
                 var submission = (from s in db.Submissions.Include("Responses.Question").Include("Exam")
                                   where s.SubmissionId == submissionId
-                                  select s).FirstOrDefault();
+                                  select s).Single();
 
                 if (submission.IsCompleted())
                 {
@@ -366,7 +403,7 @@
 
                 var exam = (from e in db.Exams.Include("Questions.Answers")
                             where e.ExamId == submission.Exam.ExamId
-                            select e).SingleOrDefault();
+                            select e).Single();
 
                 var question = (from q in exam.Questions
                                 select q).OrderBy(x => x.OrderIndex).Skip(orderIndex).Take(1).SingleOrDefault();
@@ -389,7 +426,7 @@
             using (var db = this.factory.GetExamContext())
             {
                 var submission = db.Submissions.Find(submissionId);
-                submission.Elapsed += TimeSpan.FromSeconds(5);
+                submission.Elapsed += TimeSpan.FromSeconds(Exam.HEARTBEAT_INTERVAL);
                 submission.Heartbeat = DateTime.UtcNow;
                 db.SaveChanges();
             }
@@ -415,8 +452,8 @@
             using (var db = this.factory.GetExamContext())
             {
                 var exams = (from e in db.Exams
-                         where e.UserId == this.User.Identity.Name
-                         select e)
+                             where e.UserId == this.User.Identity.Name
+                             select e)
                          .OrderBy(a => a.ExamId)
                          .Skip(offset)
                          .Take(limit)
