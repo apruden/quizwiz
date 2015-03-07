@@ -50,7 +50,7 @@
                 }
                 catch (Exception ex)
                 {
-                    throw new InvalidOperationException("The ASP.NET Simple Membership database could not be initialized.", ex);
+                    throw new InvalidOperationException("The quizwiz database could not be initialized.", ex);
                 }
             }
         }

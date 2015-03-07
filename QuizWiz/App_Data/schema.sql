@@ -1,8 +1,10 @@
-CREATE TABLE Stats (Name text not null primary key, Value integer null);
+create table Stats (Name text not null primary key, Value integer null);
+
 create table Settings (
     Name text primary key not null,
     Value text null
 );
+
 create table Answer (
     AnswerId integer primary key autoincrement,
     Text text null,
@@ -10,6 +12,7 @@ create table Answer (
     Question_QuestionId integer null,
     foreign key (Question_QuestionId) references Question(QuestionId)
 );
+
 create table Exam (
     ExamId integer primary key autoincrement,
     Name text null,
@@ -19,6 +22,7 @@ create table Exam (
 	Duration integer not null,
 	UserId text null
 );
+
 create table Question (
     QuestionId integer primary key autoincrement,
     Text text null,
@@ -27,6 +31,7 @@ create table Question (
     Exam_ExamId integer null,
     foreign key (Exam_ExamId) references Exam(ExamId)
 );
+
 create table Response (
     ResponseId integer primary key autoincrement,
     Value text null,
@@ -37,6 +42,7 @@ create table Response (
     foreign key (Question_QuestionId) references Question(QuestionId),
     foreign key (Submission_SubmissionId) references Submission(SubmissionId)
 );
+
 create table Submission (
     SubmissionId integer primary key autoincrement,
     Exam_ExamId integer null,
@@ -46,4 +52,13 @@ create table Submission (
 	Started text null,
 	Finished text null,
     foreign key (Exam_ExamId) references Exam(ExamId)
+);
+
+create table Invitation (
+	InvitationId text primary key,
+	UserId text not null,
+	Sent text not null,
+	Accepted text null,
+	Exam_ExamId integer not null,
+	foreign key (Exam_ExamId) references Exam(ExamId)
 );

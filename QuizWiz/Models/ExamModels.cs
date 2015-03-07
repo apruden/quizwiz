@@ -49,6 +49,11 @@
         public virtual DbSet<Response> Responses { get; set; }
 
         /// <summary>
+        /// 
+        /// </summary>
+        public virtual DbSet<Invitation> Invitations { get; set; }
+
+        /// <summary>
         /// Overriding to allow mapping private members with entity framework (code first).
         /// </summary>
         /// <param name="modelBuilder"></param>
@@ -311,6 +316,73 @@
         {
             return this.Elapsed > TimeSpan.FromMinutes(this.Exam.Duration) || this.Finished != null;
         }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    [Table("Invitation")]
+    public class Invitation
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        [Key]
+        public string InvitationId { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string UserId { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private string sent { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        [NotMapped]
+        public DateTime? Sent
+        {
+            get
+            {
+                return this.sent != null ? DateTime.Parse(this.sent) : (DateTime?)null;
+            }
+
+            set
+            {
+                this.sent = value.HasValue ? value.Value.ToString("u") : null;
+            }
+        }        
+  
+        /// <summary>
+        /// 
+        /// </summary>
+        private string accepted { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        [NotMapped]
+        public DateTime? Accepted
+        {
+            get
+            {
+                return this.accepted != null ? DateTime.Parse(this.accepted) : (DateTime?)null;
+            }
+
+            set
+            {
+                this.accepted = value.HasValue ? value.Value.ToString("u") : null;
+            }
+        }        
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public Exam Exam { get; set; }
     }
 
     /// <summary>

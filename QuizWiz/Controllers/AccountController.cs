@@ -21,6 +21,7 @@
     {
         private ApplicationUserManager userManager;
         private ApplicationSignInManager signInManager;
+        private IContextFactory factory;
         
         /// <summary>
         /// 
@@ -34,10 +35,11 @@
         /// </summary>
         /// <param name="userManager"></param>
         /// <param name="signInManager"></param>
-        public AccountController(ApplicationUserManager userManager, ApplicationSignInManager signInManager)
+        public AccountController(ApplicationUserManager userManager, ApplicationSignInManager signInManager, IContextFactory factory)
         {
             UserManager = userManager;
             SignInManager = signInManager;
+            ContextFactory = factory;
         }
 
         /// <summary>
@@ -65,6 +67,19 @@
                 return this.signInManager ?? HttpContext.GetOwinContext().Get<ApplicationSignInManager>();
             }
             private set { this.signInManager = value; }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public IContextFactory ContextFactory
+        {
+            get
+            {
+                return this.factory ?? new ContextFactory();
+            }
+
+            private set { this.factory = value; }
         }
 
         /// <summary>
@@ -219,27 +234,32 @@
         /// <param name="code"></param>
         /// <returns></returns>
         [AllowAnonymous]
-        public ActionResult AcceptInvitation(int examId, string email, string code)
+        public ActionResult AcceptInvitation(string id)
         {
-            string expected;
-
-            using (HMACMD5 hmac = new HMACMD5(Encoding.UTF8.GetBytes(ConfigurationManager.AppSettings["HmacSecret"])))
+            using (var db = ContextFactory.GetExamContext())
             {
-                expected = Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(string.Format("{0}:{1}", examId, email))));
+                var invitation = (from i in db.Invitations.Include("Exam")
+                                  where i.InvitationId == id
+                                  select i).SingleOrDefault();
+
+                if (invitation == null)
+                {
+                    return new HttpNotFoundResult("Invalid invitation");
+                }
+
+                
+                var user = this.UserManager.FindByEmail<ApplicationUser, string>(invitation.UserId);
+
+                if (user == null)
+                {
+                    return this.View(new AcceptInvitationViewModel { Code = id, Email = invitation.UserId, ExamId = invitation.Exam.ExamId });
+                }
+
+                invitation.Accepted = DateTime.UtcNow;
+                db.SaveChanges();
+
+                return RedirectToAction("Take", "Exams", new { id = invitation.Exam.ExamId });
             }
-
-            if (expected != code)
-            {
-                return new HttpNotFoundResult("Invalid invitation");
-            }
-
-            var user = this.UserManager.FindByEmail<ApplicationUser, string>(email);
-
-            if (user == null) { 
-                return this.View(new AcceptInvitationViewModel {Code = code, Email=email, ExamId=examId});
-            }
-
-            return RedirectToAction("Take", "Exams", new { id = examId });
         }
 
         /// <summary>
@@ -254,16 +274,17 @@
         [AllowAnonymous]
         public async Task<ActionResult> AcceptInvitation(int examId, string email, string code, string password)
         {
-            string expected;
-
-            using (HMACMD5 hmac = new HMACMD5(Encoding.UTF8.GetBytes(ConfigurationManager.AppSettings["HmacSecret"])))
+            using (var db = ContextFactory.GetExamContext())
             {
-                expected = Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(string.Format("{0}:{1}", examId, email))));
-            }
+                var invitation = db.Invitations.Find(code);
 
-            if (expected != code)
-            {
-                return new HttpNotFoundResult("Invalid invitation");
+                if (invitation == null)
+                {
+                    return new HttpNotFoundResult("Invalid invitation");
+                }
+
+                invitation.Accepted = DateTime.UtcNow;
+                db.SaveChanges();
             }
 
             var existing = (from u in UserManager.Users

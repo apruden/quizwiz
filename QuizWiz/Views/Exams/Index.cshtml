@@ -90,7 +90,7 @@
         };
 
         self.getInvitationLink = function (recipients) {
-          $.post('/exams/invite', { examId: self.current.ExamId, recipients: recipients, showOnly: true}, function (data) {
+          $.post('/invitation/invite', { examId: self.current.ExamId, recipients: recipients, showOnly: true}, function (data) {
             $('#invitationLink').html(data.link).attr('href', data.link);
           }, 'json');
         };
