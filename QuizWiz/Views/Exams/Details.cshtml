@@ -1,0 +1,23 @@
+﻿@model QuizWiz.Models.Exam
+
+@{
+    ViewBag.Title = "Details";
+}
+
+<h2>Quiz - @Model.Name</h2>
+
+<p>
+    @Model.Description
+</p>
+<p>
+    <dl>
+        <dt>Questions:</dt>
+        <dd>@Model.Questions.Count</dd>
+        <dt>Duration (minutes)</dt>
+        <dd>@Model.Duration</dd>
+    </dl>
+</p>
+<form method="get" action="@Url.Action("Take", new { id = ViewBag.ExamId })">
+    <button class="btn btn-primary">Start</button>
+    <a href="/" class="btn btn-default">Search Other</a>
+</form>

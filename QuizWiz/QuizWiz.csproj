@@ -49,6 +49,13 @@
     <Reference Include="Edlite">
       <HintPath>..\lib\Edlite.dll</HintPath>
     </Reference>
+    <Reference Include="Elmah, Version=1.2.14706.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\elmah.corelibrary.1.2.2\lib\Elmah.dll</HintPath>
+    </Reference>
+    <Reference Include="Elmah.Mvc">
+      <HintPath>..\packages\Elmah.MVC.2.1.1\lib\net40\Elmah.Mvc.dll</HintPath>
+    </Reference>
     <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\EntityFramework.6.1.2\lib\net45\EntityFramework.dll</HintPath>
@@ -117,6 +124,9 @@
     <Reference Include="NLog, Version=3.2.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\NLog.3.2.0.0\lib\net45\NLog.dll</HintPath>
+    </Reference>
+    <Reference Include="NLog.Elmah">
+      <HintPath>..\packages\NLog.Elmah.1.0.0.4\lib\net45\NLog.Elmah.dll</HintPath>
     </Reference>
     <Reference Include="Owin, Version=1.0.0.0, Culture=neutral, PublicKeyToken=f0ebd12fd5e55cc5, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -207,6 +217,7 @@
       <SubType>Designer</SubType>
     </Content>
     <Content Include="packages.config" />
+    <Content Include="NLog.config" />
     <None Include="Properties\PublishProfiles\quizwiz %282%29.pubxml" />
     <None Include="Properties\PublishProfiles\quizwiz %283%29.pubxml" />
     <None Include="Properties\PublishProfiles\quizwiz.pubxml" />
@@ -218,6 +229,7 @@
     <Content Include="Views\Exams\Status.cshtml" />
     <Content Include="Views\Submissions\Index.cshtml" />
     <Content Include="Views\Submissions\Show.cshtml" />
+    <Content Include="Views\Exams\Details.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

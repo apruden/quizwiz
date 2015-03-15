@@ -103,30 +103,70 @@
         /// <summary>
         /// 
         /// </summary>
+        /// <returns></returns>
+        [AllowAnonymous]
+        public ActionResult Details(long id, string slug)
+        {
+            using (var db = this.factory.GetExamContext())
+            {
+                var r = ValidateExam(db, id);
+
+                if (r.Item1 != null)
+                {
+                    return r.Item1;
+                }
+
+                return View(r.Item2);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        private Tuple<ActionResult, Exam, Submission> ValidateExam(ExamContext db, long id)
+        {
+            var exam = (from e in db.Exams.Include("Questions.Answers")
+                        where e.ExamId == id
+                        select e).SingleOrDefault();
+
+            if (exam == null || !exam.IsAvailable())
+            {
+                return Tuple.Create(HttpNotFound("Exam not available.") as ActionResult, exam, null as Submission);
+            }
+
+            var submission = (from s in db.Submissions.Include("Exam")
+                                    .Include("Responses.Question")
+                                where s.Exam.ExamId == id && s.UserId == this.User.Identity.Name
+                                select s).ToList().OrderBy(s => s.Started).LastOrDefault();
+
+            if (submission != null && submission.IsCompleted() && !exam.AllowRetries)
+            {
+                return Tuple.Create(RedirectToAction("Finished", "Exams") as ActionResult, exam, submission);
+            }
+
+            return Tuple.Create(null as ActionResult, exam, submission);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
         public ActionResult Take(long id, string slug)
         {
             using (var db = this.factory.GetExamContext())
             {
-                var exam = (from e in db.Exams.Include("Questions.Answers")
-                            where e.ExamId == id
-                            select e).SingleOrDefault();
+                var r = ValidateExam(db, id);
 
-                if (exam == null || !exam.IsAvailable())
+                if (r.Item1 != null)
                 {
-                    return HttpNotFound("Exam not available.");
+                    return r.Item1;
                 }
 
-                var submission = (from s in db.Submissions.Include("Exam")
-                                      .Include("Responses.Question")
-                                  where s.Exam.ExamId == id && s.UserId == this.User.Identity.Name
-                                  select s).ToList().OrderBy(s => s.Started).LastOrDefault();
-
-                if (submission != null && submission.IsCompleted() && !exam.AllowRetries)
-                {
-                    return this.RedirectToAction("Finished", "Exams");
-                }
+                var exam = r.Item2;
+                var submission = r.Item3;
 
                 if (submission == null || submission.IsCompleted())
                 {

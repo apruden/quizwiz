@@ -13,6 +13,7 @@ CREATE TABLE [AspNetUsers]
     [LockoutEnabled] integer NOT NULL,
     [AccessFailedCount] integer NOT NULL
 );
+
 CREATE TABLE [AspNetUserClaims]
 (
     [UserID] text,
@@ -20,17 +21,20 @@ CREATE TABLE [AspNetUserClaims]
     [ClaimType] text NULL,
     [ClaimValue] text NULL
 );
+
 CREATE TABLE [AspNetUserLogins]
 (
     [UserID] text,
     [LoginProvider] text NOT NULL,
     [ProviderKey] text NOT NULL
 );
+
 CREATE TABLE [AspNetRoles]
 (
     [Id] text NOT NULL,
     [Name] text NOT NULL
 );
+
 CREATE TABLE [AspNetUserRoles]
 (
     [UserId] text NOT NULL,

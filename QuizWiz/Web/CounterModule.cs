@@ -47,7 +47,7 @@
             HttpApplication application = sender as HttpApplication;
             application.Context.Response.Filter = new StreamCounter(application.Context.Response.Filter);
 
-            if (Global.bytesSent > int.Parse(ConfigurationManager.AppSettings["BytesSentLimit"]))
+            if (Global.bytesSent > int.Parse(ConfigurationManager.AppSettings["BytesSentLimit"] ?? 2000000.ToString()))
             {
                 application.Context.Response.Close();
             }

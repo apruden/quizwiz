@@ -1,5 +1,6 @@
 ﻿namespace QuizWiz.Controllers
 {
+    using NLog;
     using QuizWiz.Models;
     using System;
     using System.Collections.Generic;
@@ -16,8 +17,14 @@
     /// </summary>
     public class InvitationController : Controller
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
         private IContextFactory factory;
-        int[] alphabet = Enumerable.Range('a', 26).Concat(Enumerable.Range('A', 26)).Concat(Enumerable.Range(48, 10)).ToArray();
+
+        int[] alphabet = Enumerable.Range('a', 26)
+            .Concat(Enumerable.Range('A', 26))
+            .Concat(Enumerable.Range(48, 10))
+            .ToArray();
 
         /// <summary>
         /// 
@@ -96,6 +103,8 @@
         [Authorize(Roles = "editor")]
         public ActionResult Invite(string recipients, int examId, bool showOnly = false)
         {
+            Logger.Info("Sending invitation to {0}", recipients);
+
             string body, subject;
             string[] recipientsList = (from r in recipients.Split(',')
                                        select r.Trim()).ToArray();

@@ -1,5 +1,6 @@
 ﻿namespace QuizWiz
 {
+    using NLog;
     using System;
     using System.Configuration;
     using System.Data.SQLite;
@@ -14,6 +15,7 @@
     /// </summary>
     public class MvcApplication : System.Web.HttpApplication
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private static readonly object lockObj = new object();
         private Timer timer;
 
@@ -45,10 +47,23 @@
                         cmd.ExecuteNonQuery();
                     }
                 }
+
+                using (var conn = new SQLiteConnection(ConfigurationManager.ConnectionStrings["DefaultConnection"].ConnectionString))
+                {
+                    conn.Open();
+
+                    using (var cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = string.Format(
+                            "DELETE FROM Error WHERE ErrorId < (" + 
+                            "SELECT ErrorId FROM Error ORDER BY ErrorId DESC LIMIT 1 OFFSET {0})", ConfigurationManager.AppSettings["ElmahErrorLimit"] ?? 50.ToString());
+                        cmd.ExecuteNonQuery();
+                    }
+                }
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.ToString());
+                Logger.ErrorException("Error in timer", e);
             }
         }
 
@@ -57,6 +72,7 @@
         /// </summary>
         protected void Application_Start()
         {
+            Logger.Info("Application starting");
             this.SetupDatabase();
             AreaRegistration.RegisterAllAreas();
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);

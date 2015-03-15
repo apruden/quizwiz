@@ -1,64 +1,70 @@
-create table Stats (Name text not null primary key, Value integer null);
+CREATE TABLE Stats (Name TEXT NOT NULL PRIMARY KEY, Value INTEGER NULL);
 
-create table Settings (
-    Name text primary key not null,
-    Value text null
+CREATE TABLE Settings (
+    Name TEXT PRIMARY KEY NOT NULL,
+    Value TEXT NULL
 );
 
-create table Answer (
-    AnswerId integer primary key autoincrement,
-    Text text null,
-    Points integer not null,
-    Question_QuestionId integer null,
-    foreign key (Question_QuestionId) references Question(QuestionId)
+CREATE TABLE Answer (
+    AnswerId INTEGER PRIMARY KEY AUTOINCREMENT,
+    Text TEXT NULL,
+    Points INTEGER NOT NULL,
+    Question_QuestionId INTEGER NULL
 );
 
-create table Exam (
-    ExamId integer primary key autoincrement,
-    Name text null,
-	Description text null,
-    AllowRetries boolean not null,
-	Private boolean not null,
-	Duration integer not null,
-	UserId text null
+CREATE TABLE Exam (
+    ExamId INTEGER PRIMARY KEY AUTOINCREMENT,
+    Name TEXT NULL,
+	Description TEXT NULL,
+    AllowRetries boolean NOT NULL,
+	Private boolean NOT NULL,
+	Duration INTEGER NOT NULL,
+	UserId TEXT NULL
 );
 
-create table Question (
-    QuestionId integer primary key autoincrement,
-    Text text null,
-    OrderIndex integer not null,
-    IsOpenEnded boolean not null,
-    Exam_ExamId integer null,
-    foreign key (Exam_ExamId) references Exam(ExamId)
+CREATE TABLE Question (
+    QuestionId INTEGER PRIMARY KEY AUTOINCREMENT,
+    Text TEXT NULL,
+    OrderIndex INTEGER NOT NULL,
+    IsOpenEnded boolean NOT NULL,
+    Exam_ExamId INTEGER NULL
 );
 
-create table Response (
-    ResponseId integer primary key autoincrement,
-    Value text null,
-    Answer_AnswerId integer null,
-    Question_QuestionId integer null,
-    Submission_SubmissionId integer null,
-    foreign key (Answer_AnswerId) references Answer(AnswerId),
-    foreign key (Question_QuestionId) references Question(QuestionId),
-    foreign key (Submission_SubmissionId) references Submission(SubmissionId)
+CREATE TABLE Response (
+    ResponseId INTEGER PRIMARY KEY AUTOINCREMENT,
+    Value TEXT NULL,
+    Answer_AnswerId INTEGER NULL,
+    Question_QuestionId INTEGER NULL,
+    Submission_SubmissionId INTEGER NULL
 );
 
-create table Submission (
-    SubmissionId integer primary key autoincrement,
-    Exam_ExamId integer null,
-    UserId text null,
-	Elapsed integer not null,
-	Heartbeat text null,
-	Started text null,
-	Finished text null,
-    foreign key (Exam_ExamId) references Exam(ExamId)
+CREATE TABLE Submission (
+    SubmissionId INTEGER PRIMARY KEY AUTOINCREMENT,
+    Exam_ExamId INTEGER NULL,
+    UserId TEXT NULL,
+	Elapsed INTEGER NOT NULL,
+	Heartbeat TEXT NULL,
+	Started TEXT NULL,
+	Finished TEXT NULL
 );
 
-create table Invitation (
-	InvitationId text primary key,
-	UserId text not null,
-	Sent text not null,
-	Accepted text null,
-	Exam_ExamId integer not null,
-	foreign key (Exam_ExamId) references Exam(ExamId)
+CREATE TABLE Invitation (
+	InvitationId TEXT PRIMARY KEY,
+	UserId TEXT NOT NULL,
+	Sent TEXT NOT NULL,
+	Accepted TEXT NULL,
+	Exam_ExamId INTEGER NOT NULL
+);
+
+CREATE TABLE Error (
+    ErrorId INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    Application TEXT NOT NULL,
+    Host TEXT NOT NULL,
+    Type TEXT NOT NULL,
+    Source TEXT NOT NULL,
+    Message TEXT NOT NULL,
+    User TEXT NOT NULL,
+    StatusCode INTEGER NOT NULL,
+    TimeUtc TEXT NOT NULL,
+    AllXml TEXT NOT NULL
 );

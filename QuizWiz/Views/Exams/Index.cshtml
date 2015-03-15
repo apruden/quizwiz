@@ -5,7 +5,9 @@
 <div class="row voffset">
   <div class="col-xs-12">
     @if (this.User.IsInRole("editor")) { 
-      <p>@Html.ActionLink("Create Exam >>", "Edit", "Exams", null, new { @class = "btn btn-primary btn-large" })</p>
+      <p>
+      @Html.ActionLink("Create Exam", "Edit", "Exams", null, new { @class = "btn btn-primary btn-large" })
+      </p>
     }
   </div>
 </div>
@@ -18,7 +20,7 @@
     </div>
     <div class="list-group" data-bind="foreach: exams">
       <div class="list-group-item">
-        <a href="#" data-bind="text: Name" class="list-group-item-heading"></a>
+        <a href="#" data-bind="text: Name, attr: { href: '/exams/details/' + ExamId}" class="list-group-item-heading"></a>
         <p class="list-group-item-text" data-bind="text: Description"></p>
         <a href="#" class="btn btn-default" data-bind="attr: { href: '/exams/edit/' + ExamId }">Edit</a>
         <a href="#" class="btn btn-default" data-bind="click: $parent.delete">Delete</a>
@@ -26,7 +28,7 @@
         <a href="#" class="btn btn-default" data-bind="click: $parent.submissions">Submissions</a>
       </div>
     </div>
-    <button class="btn btn-primary btn-lg" data-bind="click: getNext">More</button>
+    <button class="btn btn-default" data-bind="click: getNext">More</button>
   </div>
 </div>
 <!-- Modal -->
@@ -97,7 +99,7 @@
 
         self.sendInvitations = function (recipients) {
           $('#myModal').modal('toggle');
-          $.post('/exams/invite', { examId: self.current.ExamId, recipients: recipients});
+          $.post('/invitation/invite', { examId: self.current.ExamId, recipients: recipients});
           self.current = null;
         };
 

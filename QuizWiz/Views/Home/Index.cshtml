@@ -30,9 +30,9 @@
     </div>
     <div class="list-group" data-bind="foreach: exams">
       <div class="list-group-item">
-        <a href="#" data-bind="text: Name" class="list-group-item-heading"></a>
+          <a href="#" data-bind="text: Name, attr: { href: '/exams/details/' + ExamId }" class="list-group-item-heading"></a>
         <p class="list-group-item-text" data-bind="text: Description"></p>
-        <a href="#" class="btn btn-default" data-bind="attr: { href: '/Exams/Take/' + ExamId }">Take</a>
+        <a href="#" class="btn btn-default" data-bind="attr: { href: '/exams/take/' + ExamId }">Take</a>
       </div>
     </div>
   </div>
