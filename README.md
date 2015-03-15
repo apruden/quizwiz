@@ -18,4 +18,4 @@ Web application to create quizzes/surveys.
 
 #Demo
 
-Try it at http://quizwiz.azurewebapps.net
+Try it at http://quizwiz.azurewebsites.net
