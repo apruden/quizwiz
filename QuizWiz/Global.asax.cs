@@ -63,7 +63,7 @@
             }
             catch (Exception e)
             {
-                Logger.ErrorException("Error in timer", e);
+                Logger.Error(e, "Error in timer");
             }
         }
 
